@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despedida — Mi última confesión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07070b;
+            --bg-card: rgba(15, 15, 22, 0.78);
+            --text-primary: #eae5db;
+            --text-secondary: #a8a29e;
+            --accent: #d4b499;
+            --accent-soft: rgba(212, 180, 153, 0.18);
+            --border-subtle: rgba(212, 180, 153, 0.22);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(28, 24, 43, 0.45) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(35, 25, 32, 0.4) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: 'Lora', Georgia, serif;
+            line-height: 1.95;
+            font-size: 1.12rem;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Reading Progress Bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #8c6d53, var(--accent), #f3e5d8);
+            width: 0%;
+            z-index: 100;
+            transition: width 0.1s ease-out;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Background Canvas */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Floating Mute Button for 3 Songs */
+        .mute-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 90;
+            background: rgba(12, 12, 18, 0.88);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 11px 20px;
+            border-radius: 30px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .mute-btn:hover {
+            background: rgba(212, 180, 153, 0.14);
+            border-color: var(--accent);
+        }
+
+        .music-bars {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+        }
+
+        .music-bars span {
+            width: 2px;
+            background: var(--accent);
+            border-radius: 1px;
+            height: 3px;
+            transition: height 0.2s ease;
+        }
+
+        .mute-btn.playing .music-bars span:nth-child(1) {
+            animation: bounce 0.8s infinite ease-in-out;
+        }
+        .mute-btn.playing .music-bars span:nth-child(2) {
+            animation: bounce 0.8s infinite ease-in-out 0.2s;
+        }
+        .mute-btn.playing .music-bars span:nth-child(3) {
+            animation: bounce 0.8s infinite ease-in-out 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { height: 3px; }
+            50% { height: 12px; }
+        }
+
+        /* Back button */
+        .top-nav {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 90;
+        }
+
+        .back-link {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 9px 16px;
+            border-radius: 30px;
+            background: rgba(12, 12, 18, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-link:hover {
+            color: var(--text-primary);
+            border-color: var(--accent);
+            background: rgba(212, 180, 153, 0.1);
+        }
+
+        /* Letter Wrapper */
+        .letter-wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 820px;
+            margin: 90px auto 120px;
+            padding: 70px 65px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+        }
+
+        .letter-header {
+            text-align: center;
+            margin-bottom: 55px;
+            padding-bottom: 35px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .letter-header h1 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+            font-weight: 400;
+            font-style: italic;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .letter-header .subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.78rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .letter-content p {
+            margin-bottom: 1.75em;
+            text-align: justify;
+            color: var(--text-primary);
+            font-weight: 400;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .letter-content p.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Section Titles inside the letter */
+        .letter-content h2 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 600;
+            font-style: italic;
+            color: var(--accent);
+            margin: 2.5em 0 1.2em;
+            text-align: center;
+            position: relative;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .letter-content h2.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .letter-content h2::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 1px;
+            background: var(--accent);
+            margin: 12px auto 0;
+            opacity: 0.5;
+        }
+
+        /* Bullet thoughts in the Extra section */
+        .letter-content p.thought-item {
+            padding-left: 22px;
+            border-left: 2px solid var(--border-subtle);
+            font-style: italic;
+            color: #dcd6c8;
+            margin-bottom: 1.4em;
+        }
+
+        /* Highlighted final sign-off */
+        .letter-content p.final-signoff {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.65rem;
+            font-style: italic;
+            text-align: center;
+            color: var(--accent);
+            margin-top: 2.5em;
+            margin-bottom: 1em;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 45px 0;
+            color: var(--accent);
+            opacity: 0.5;
+            font-size: 1.2rem;
+            letter-spacing: 12px;
+        }
+
+        /* =========================================================================
+           DISEÑO RESPONSIVO PARA TELÉFONOS MÓVILES (SIN PERDER LA ESENCIA DE CARTA)
+           ========================================================================= */
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.04rem;
+                line-height: 1.9;
+                background-attachment: scroll; /* Evita saltos de fondo en iOS/Android */
+            }
+
+            .top-nav {
+                top: calc(14px + env(safe-area-inset-top, 0px));
+                left: 14px;
+            }
+
+            .back-link {
+                padding: 8px 14px;
+                font-size: 0.7rem;
+                letter-spacing: 1.4px;
+                background: rgba(12, 12, 18, 0.85);
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .letter-wrapper {
+                margin: 68px 14px calc(115px + env(safe-area-inset-bottom, 0px));
+                padding: 42px 24px;
+                border-radius: 10px;
+                box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8);
+            }
+
+            .letter-header {
+                margin-bottom: 38px;
+                padding-bottom: 26px;
+            }
+
+            .letter-header h1 {
+                font-size: clamp(2rem, 8vw, 2.5rem);
+                margin-bottom: 8px;
+            }
+
+            .letter-header .subtitle {
+                font-size: 0.7rem;
+                letter-spacing: 2.5px;
+            }
+
+            .letter-content p {
+                margin-bottom: 1.65em;
+                text-align: justify;
+                hyphens: auto;
+                -webkit-hyphens: auto;
+            }
+
+            .letter-content h2 {
+                font-size: 1.75rem;
+                margin: 2.2em 0 1em;
+            }
+
+            .letter-content p.thought-item {
+                padding-left: 16px;
+                margin-bottom: 1.35em;
+            }
+
+            .letter-content p.final-signoff {
+                font-size: 1.45rem;
+                line-height: 1.5;
+                margin-top: 2.2em;
+            }
+
+            .divider {
+                margin: 34px 0;
+                font-size: 1.05rem;
+                letter-spacing: 10px;
+            }
+
+            .mute-btn {
+                bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+                right: 16px;
+                padding: 10px 16px;
+                font-size: 0.74rem;
+                background: rgba(10, 10, 16, 0.92);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85);
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
+
+        @media (max-width: 400px) {
+            body {
+                font-size: 0.98rem;
+                line-height: 1.85;
+            }
+
+            .letter-wrapper {
+                margin: 62px 10px calc(110px + env(safe-area-inset-bottom, 0px));
+                padding: 32px 18px;
+            }
+
+            .letter-header h1 {
+                font-size: 1.9rem;
+            }
+
+            .letter-content h2 {
+                font-size: 1.55rem;
+            }
+
+            .mute-btn {
+                padding: 9px 14px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+    <canvas id="particles"></canvas>
+
+    <nav class="top-nav">
+        <a href="index.html" class="back-link">&#8592; Volver</a>
+    </nav>
+
+    <!-- =========================================================================
+         REPRODUCTOR DE 3 CANCIONES EN SECUENCIA Y LOOP (SIEMPRE ACTIVO POR DEFAULT)
+         ========================================================================= -->
+    <audio id="playlist-audio" autoplay preload="auto"></audio>
+
+    <button id="mute-btn" class="mute-btn playing" title="Silenciar / Activar sonido">
+        <div class="music-bars">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <span id="mute-label">Silenciar</span>
+    </button>
+
+    <main class="letter-wrapper">
+        <header class="letter-header">
+            <h1>Para Valentina</h1>
+            <div class="subtitle">Mi última confesión</div>
+        </header>
+
+        <article class="letter-content" id="letter-body">
+            <p>Bueno, llegados a este punto, no sé ni cómo iba a hacer esto. Verdaderamente, el volver a "posponer" lo que hacía se convirtió de nuevo en un hábito en general, en cada ámbito de mi vida diaria, como odie eso; pero bueno, no es momento para hablar de esto, aún no.</p>
+
+            <p>No sé en qué momento te mandare esto, y no me refiero a la hora (en parte), sino a la fecha. Quiero pensar en ti y en tu "contexto", pero créeme que llegué a mi límite.</p>
+
+            <p>Me da tristeza y quisiera vivir cerca de ti para abrazarte y decirte: "Aquí estoy, estoy contigo, todo estará bien, ¿sí?", y tomar algo caliente o frío dependiendo de la hora y el clima. Je, sueno tonto, ¿no lo crees?</p>
+
+            <p>Te pido perdón por esto. Aunque sea... por última vez, seré completamente honesto contigo y sin guardarme nada. Probablemente, cuando leas esto, yo ya me habré ido de tu vida. Me hubiera gustado quedarme un rato más... o que esta vez pudiéramos formar algo que durara para siempre..., pero veo que tampoco fue posible. Y más que yo tomara la decisión, ya había intentado hacer esto anteriormente, pero... simplemente no podía hacerlo, por muchas razones que ya comentaré. Pero te lo dije, ¿no? Si vas a hacer algo, no te arrepientas de lo que venga después. Cada decisión tiene una consecuencia y cada decisión exige dejar algo atrás o sacrificar algo: tiempo, dinero, familia, amigos; pero eso también te lleva a otro camino. No existen las malas decisiones, solamente son eso, "decisiones" que te llevarán a donde tú mismo te quisiste llevar. Quédate con la frase de no arrepentirte, que se usará más adelante.</p>
+
+            <p>Je, hola, Valentina, mi tan querida Valentina... Adoré mucho tu nombre; incluso a veces lo repetía sin darme cuenta o me ponía a pensar en lo que pudimos haber hecho y en muchos más planes que... lamentablemente ya no se podrán hacer. Realmente no quería que las cosas acabaran de esta forma; sinceramente esperaba que ahora sí fuera diferente, mejor, y yo de verdad esperaba que en algún punto eso se pudiera lograr. Esperaba que los dos nos entendiéramos y fuéramos mejores, que en esta ocasión en que nos "reencontráramos", tú y yo fuéramos personas en las cuales se pudiera confiar y estar hombro a hombro ante lo que viniera en el presente o en el futuro... Supongo que las cosas realmente no salen como uno esperaría.</p>
+
+            <p>Realmente este 2025 y 2026 fueron años muy caóticos; pasaron demasiadas cosas en general, aunque esperaba que fueran mejores. De verdad fueron años que me destrozaron física y mentalmente, y me imagino que tú pasaste por lo mismo. Es un texto algo largo, entonces vayamos por el inicio.</p>
+
+            <h2>Lo que yo pasé:</h2>
+
+            <p>Realmente fue duro lo que hiciste: dejarme en una fecha en la que me habían pasado tantas cosas año tras año, como la muerte de mi abuela, la de mi perrita y, también, tu despedida. Me sentía devastado. No estaban mis padres, ya que se habían ido de viaje; je, todavía me acuerdo de eso. El sentimiento era horrible, pues no me sentía dispuesto a querer hacer nada. Me sentía extraño... estando en mi casa, me habían terminado en mi propia casa: "No hay nadie, ¿qué voy a hacer ahora?". El lunes tenía clases, proyectos, exámenes finales... ¿Cómo iba a continuar? Y pensaba: "¿Por qué? ¿No podías haberte esperado a que saliera de clases...? ¿Tanto así querías irte...?". Fue el mes más horrible que pasé en toda mi vida; no quería hacer nada, quería tirar todo a la basura y hasta llegué a pensar en reprobar todas las materias que me faltaban por pasar (que eran las más complicadas y difíciles). En las clases que tenía libres me iba al carro a llorar, e incluso cuando me dormía ahí en el carro, tenía sueños que tenían que ver contigo y me despertaba triste y sollozando; es curioso, ya que nunca pensé que uno pudiera despertarse llorando. Mientras trataba de enfocarme en cómo hablar contigo y ver si había algo que pudiera hacer, yo no me sentía bien ni con los ánimos de hacer nada. Fue forzar a mi cuerpo a moverse, donde cada paso dolía y pesaba a más no poder, donde concentrarme era demasiado complicado. Tenía que memorizar, recrear y hacer muchas cosas; ¿cómo mierda podría haber hecho todo eso en el estado en el que estaba? Pero, de alguna forma, lo logré. En algún punto de esos días comprendí algo: si yo decaía, si yo me rendía... no le afectaría a nadie más que a mí, y ni siquiera tendría dónde llorar o descansar. Tampoco tenía un lugar seguro: mi casa... ya no me sentía seguro ni tranquilo estando en ella, ya que siempre quedaban los recuerdos de ese día. ¿Amigos, algo más que eso? Ja, alejé a todos creyendo que eso estaría bien si significaba que a ti no te causaría malestar o desconfianza y, vaya... al final solo me dejó más solo. Los días fueron pasando y yo solamente caía más en un pozo de depresión, ansiedad y miedo constante. Me hice daño muchas veces; fue en el tiempo en que escribí la carta, y sí, la volví a leer y vaya que sonaba muy desesperado y esperanzado. Qué ingenuo fui por hacer eso. Dije que ya había cambiado muchas cosas que exteriormente parecían haberse resuelto y pensé: "Wow, realmente era sencillo cambiar...", pero internamente yo seguía igual. En las vacaciones, usé mi tiempo para evitar que las cosas terminaran como terminaron, pero al final lo que mandé realmente tuvo el resultado que esperaba: una negativa de tu parte. Estaba bien, a ese punto ya había entendido lo que pasaba, pero al menos quería intentar de todo antes de rendirme completamente; por eso, mandarte eso fue un alivio. Aunque lo que se me hizo cruel fue que te negaras a que nos viéramos. Esa salida no era para estar abrazados ni nada parecido; solo quería verte una última vez, que las cosas quedaran claras y ya con eso irme de tu vida. ¿Pero qué recibí a cambio? "Yo ya no quiero verte", "Ya no siento las ganas de arreglar algo contigo", "Ya no siento las ganas de seguir contigo". Palabras que me destrozaron y me hicieron hablar como hablé, con esa desesperación de una persona que ruega para que no la abandonen. Wow, dolió. ¿Cómo es que tres años se borran tan fácilmente que incluso ya no se siente nada? ¿Y qué fue lo que recibí de respuesta? Que habías pasado el duelo durante la relación y te obligaste a sentirte terriblemente mal hasta que el sentimiento de ¿amor? pasara. Traté de hacer lo mismo varias veces, por más de una semana e incluso meses, y ni así logré olvidarte... ni así logré dejar de sentir lo que sentía. A fin de cuentas, lo mejor que pude hacer fue simplemente pensar en que harías lo peor estando por tu cuenta, y eso ayudó; hizo que el sentimiento fuera pasando, pero ni así llegaba a ser nulo. Siempre quedaba esa chispa de esperanza de que tal vez volverías y podríamos hacer las cosas de forma diferente. Me costó casi un año poder soltarte de forma casi completa.</p>
+
+            <p>Pero cuando pensaba hacerlo de forma completa, después de haber pasado por todo el duelo y ya llegando a la etapa de la aceptación, volviste.</p>
+
+            <p>Pero antes de indagar más en eso, hablemos un poco de lo que fue mi proceso cuando no estaba concentrado en pasar por el duelo, un poco de mi vida... Ah... vaya, fue complicado al inicio. Me sentía perdido y ya no sabía qué hacer, sin muchos amigos, cada quien ocupado salvando su semestre o en sus cosas personales, y yo... simplemente había perdido mi rumbo. Como te comenté, en mis metas y sueños estabas tú, y ahora... ¿qué se supone que hiciera con todo lo que sentía y con mis metas? Ni siquiera podía escribirte. Me sentí tan solo en esa fecha por todo lo que me había pasado antes... La soledad era algo a lo que ya no estaba acostumbrado, y lo único que hacía en esos momentos era simplemente mentalizarme en que iba a cambiar por ti, y que en algún momento regresarías y verías que podía cambiar, que sería lo suficientemente maduro y que ya no sería aquello que decías que yo era contigo ni me faltaría darte lo que no te di; que podríamos hablar y veríamos que todo eso fue solamente una mala racha... que podía enmendar todo lo que hice y podría seguirte el ritmo... que podría acompañarte y caminar a tu lado. Sentimientos y pensamientos tan denigrantes.</p>
+
+            <p>Ha pasado mucho tiempo desde que escribí de esta manera; esperaba no volver a hacerlo, pero bueno.</p>
+
+            <p>Me sentía muerto por dentro, ya que todo lo que hacía era fingir que podía mantenerme firme y aguantar el sentimiento de tristeza, vacío y soledad, pero no pude. Al final, jamás traté de ocultar que me sentía mal o que mi mundo se estaba destruyendo; simplemente iba día tras día sin sentir mucho de nada. Realmente quería simplemente desaparecer o morir. Al principio no podía tener días completamente felices; los pensamientos no dejaban de llegar y, al dormir, siempre soñaba contigo. Despertaba cansado a pesar de dormir "bien" y mi estado de ánimo al despertar era desesperación pura. Fue entonces cuando comencé a descuidarme: el pelo siempre desaliñado, no cuidaba mi salud y, por no querer dormir y soñar contigo otra vez, me pasé noches enteras sin dormir o durmiendo 6 a 8 horas por semana... lloraba de desesperación pidiéndole a mi propia mente que parara. Intenté tenerte odio, intenté pensar en cada cosa mala que hiciste, en cada palabra hiriente, en ver cómo preferías otras compañías, en cada mal trato e incluso en lo que harías una vez que nos separáramos. Fue doloroso hacer eso, pero no fue suficiente... ¿Por qué no podía dejar de quererte? ¿Por qué seguía sintiendo esto por alguien que se alejó sin darme aunque fuera la oportunidad de hablar y dejar claras las cosas? ¿Realmente todo ese amor desapareció? Quería que todo eso acabara: pastillas, un psicólogo, lo que fuera, pero que se detuviera. Me sentía cansado de la vida; no era feliz, pero tampoco quería morir. Sentía que todo pendía de un hilo tan flojo que podía romperse en cualquier momento; estaba en un lugar y era como si mi mente y mi cuerpo estuvieran en otro lado. Eso casi me cuesta perder todas mis materias, pero, de alguna forma, sobreviví.</p>
+
+            <p>En todo ese proceso, mientras más me iba desapegando de ti, poco a poco iba notando ciertos cambios. De repente, las personas se me acercaban y querían hablar conmigo. Aunque al inicio me costó mucho trabajo, poco a poco fui haciendo nuevas compañías y se sentía bien tener a alguien con quien hablar en mis ratos libres. De un momento a otro, empecé a darle un nuevo significado a esas "compañías" y comencé a llamarlas amistades, amistades con quienes podía conversar; de pronto ya no estaba tan solo, sentía que ya podía respirar un poco más y, así, día con día, empecé a vivir momentos increíbles y a pasar por muchas cosas buenas. Aunque yo lo evitaba o simplemente no prestaba la suficiente atención, muchas cosas ocurrían sin que yo lo notara. De un momento a otro ya tenía más amistades y mejores momentos, ya no sobrepensaba tanto y tu recuerdo ya no dolía igual... Cada vez podía socializar con menos problemas, y el sentirme un poco vivo de nuevo me hizo querer seguir así y no volver a caer. Para ese punto quise volver al inglés, ya que ahí podría socializar más y sería como un descanso de mis clases, que en su momento eran demasiado pesadas. Aunque, vaya, que llegaran más amistades también significó que apareciera otro tipo de compañías. Como te mencioné en algún punto cuando volvimos a hablar por primera vez, llegué a tener oportunidades de iniciar una nueva relación, pero, je, preferí no tomar la primera opción que se me dio. ¿Por qué empezaría a estar con otra persona? Aún tenía tus cartas, tus regalos, soñaba contigo de vez en cuando y todavía seguía sintiendo algo por ti. Aunque me sintiera solo y extrañara los abrazos y todo lo demás, yo sabía que no sería lo correcto, que simplemente sería una pérdida de tiempo, y no quería volver a entregar mi tiempo para que al final ni valiera la pena. Corté lazos con toda persona que buscaba eso y simplemente seguí con mi vida. Estaba haciendo las cosas bien, me estaba sintiendo bien y, por primera vez, estaba construyendo un futuro que se veía prometedor; entonces, ¿para qué meterme en una relación donde no había amor ni una emoción fuerte de por medio? Retrocediendo un poco antes de eso, entre toda la melancolía, la tristeza, etcétera, me miré al espejo y vi lo mal que lucía. Odiaba el estado en el que me encontraba, como si durante todo ese tiempo simplemente hubiera ignorado mi propio bienestar, caminando solo porque debía hacerlo y haciendo lo mínimo únicamente para vivir. Me veía lamentable, y vino de nuevo ese pensamiento: "Si yo decaigo y me veo de esta forma, ¿a quién le va a preocupar? ¿Con quién podría acudir si me siento tan mal?". Entonces empecé a cuidarme más: me corté el pelo, que tenía tan desaliñado y que ya ni siquiera cuidaba; empecé a comer mejor, a mejorar mi horario de sueño y a ir al gimnasio. Eso ayudó e hizo que las cosas mejoraran, dando paso a todo lo que conté antes. Y justo cuando ya estaba listo para seguir adelante —incluso con un recuerdo que aún me causaba un pequeño dolor en el pecho— y borrar esta vez todo lo que era tuyo... apareciste de nuevo.</p>
+
+            <p>Admito que, cuando volví a ver tu chat con el símbolo de un mensaje pendiente, yo estaba en clases de verano, retomando la materia que había perdido. Me acuerdo de que lo vi y no quise contestar al momento; me salí de mi clase y me puse a caminar por todo el Tec mientras pensaba en qué hacer o qué decir: "¿Por qué ahora? ¿Por qué cuando estaba a punto de seguir con mi vida apareces así como así?". Me tomó varios minutos hacer algo al respecto. Hablé contigo de manera algo seca, ya que mi pensamiento era: "Tal vez dirá que iba a checar algo o simplemente se confundió; ya después de eso se irá y yo seguiré con mi vida". Y así fue: checaste si no te había bloqueado, te confirmé que no y ya no hubo más plática después de intercambiar un par de palabras. Pensé que ahí iba a terminar todo y ya no le presté más importancia. Hasta que después, mientras estaba viendo un anime, me llegó una notificación personalizada que pensé que no volvería a escuchar, y quisiste seguir hablando, lo cual no me pareció mal. Después de un par de días, todo parecía ir bien; las pláticas eran tranquilas y se notaba interés de ambas partes. Te conté que mi vida iba de maravilla y que todo me estaba saliendo bien. Pensé que eso te alegraría, aunque me sacó de onda que comentaras que, si todo me estaba saliendo bien, qué razón tenía para hablar contigo; no pensé que debiera existir una razón negativa o que yo tuviera que sentirme mal para querer hablarte o saber de ti. Después supe más de ti y acordamos vernos cuando regresara de mi viaje a la playa. Cuando llegó el día, yo estaba feliz, algo esperanzado; tenía tanto que contarte sobre cómo había hecho las cosas bien hasta el momento, siendo una nueva persona, con nuevos hábitos, nuevos gustos, una nueva mentalidad y una nueva vida. Esperaba que tú me comentaras lo mismo, que ambos nos habíamos esforzado por estar bien y lo difícil que había sido llegar hasta ese punto. Tal vez no todo estaría perfecto, pero tener un avance significativo ya sería lo mejor para dar un paso al frente.</p>
+
+            <p>Ese día... fue cuando todo se vino abajo.</p>
+
+            <p>Admito que me sentí algo nervioso por verte: "¿Le gustará esta versión de mí? ¿Y si todo es incómodo desde el momento en que hablemos?". Aunque, vaya, yo estaba en paz con lo que pasara: si ya no éramos compatibles o nuestros caminos y visiones para el futuro ya no coincidían, al menos sería un cierre perfecto para mí; y si las cosas funcionaban, tenía miles de planes para hacer y proponer, para empezar bien, desde cero. Yo había dejado un camino despejado para que pudiéramos crear algo sólido, y esperaba que tú pudieras hacer lo mismo: empezar como una amistad, tener citas, ver películas, conocer lugares y proponerte ser mi pareja de una forma muy hermosa, para que todo, de inicio a fin, fuera perfecto. Cuando llegamos al mismo lugar de siempre y pude verte mejor, no pude dejar de mirar y preguntarme por qué tenías las manos con vendajes. Luego me contaste que te habías autolesionado, que tu vida no estaba yendo muy bien y eso... me destrozó. Verte de esa forma me hizo sentir muy mal por ti.</p>
+
+            <p>Aunque, vaya... todavía estaba tratando de asimilar lo que había visto y escuchado y, por si eso no hubiera sido suficiente, me comentaste que ya habías estado en otra relación... Wow, creo que ya había escuchado suficiente. Lo que dijiste al principio me hizo dudar, pero eso fue la gota que derramó el vaso para mí. Estaba bien; solamente se trataba de no estar de acuerdo, reconocer que no me sentía cómodo, simplemente agradecer por todo, no continuar con lo que fuera que pudiera haber sido eso e irme... Lo peor fue cuando sujetaste mi brazo y me pediste que no me fuera. ¿Por qué? Se supone que uno es libre de escoger quedarse o irse; si tú misma hiciste eso antes, ¿por qué me detuviste? Me quedé solamente porque quería escuchar lo que tenías por decir, pero cada vez era más doloroso: que mostraras tanto entusiasmo por saber si yo había estado con alguien más, si había besado a alguien más o si lo había hecho con alguien más... Dios, no sé por qué no me fui apenas di media vuelta para llevarte a tu casa, y no sé por qué simplemente lo acepté y decidí seguir contigo. Fui ingenuo solo porque no podía procesar todo lo que me habías contado, pero igual, ya pasó; no tiene caso que me siga atormentando por eso. Al llegar a mi casa, simplemente lloré como nunca había llorado antes; no sabía por qué ese sentimiento volvía a mí, simplemente no pude concentrarme en otra cosa que no fuera esa.</p>
+
+            <p>Sería un insulto para mí si no supiera la razón de por qué me sentí tan mal, día con día, tratando de superar ese tan dichoso duelo, tratando de dejar atrás el sentimiento. Primero intentaba procesar todo: "Tal vez esto sea como la última vez; ella se tomará su tiempo para sentirse bien, hablaremos de nuevo y todo estará bien, ¿no...?", contando los segundos, las horas, los días, las semanas y los meses... solo sintiendo cómo el tiempo pasaba mientras yo seguía tratando de hacer cambios en mí, pensando en si algún día podría haber sido suficiente para ti, para que tal vez eligieras quedarte. Pasé días horribles, noches sin dormir, y solo sentía que todo se volvía más solitario. A pesar de eso, seguí intentándolo y mejorando. La primera vez que quise mejorar fue por ti, pero luego entendí que, si iba a hacer algo, debía ser por mí, y que solo así podría realmente lograr un cambio. Como mencioné, de un momento a otro las cosas mejoraron, pero durante mucho tiempo seguí sintiendo tanta desesperación al recordar tus palabras y tus cartas donde decías: "Todo estará bien, yo estaré contigo". ¿Recuerdas eso o simplemente eran mentiras tuyas? Estando en un lugar como mi casa, donde todo pasó, donde te dejé entrar y donde tú misma decidiste terminar todo, aun así esperaba tu regreso; aun así no pude olvidarte ni simplemente dejar de sentir algo por ti. Pasé noches en vela pensando: "Tal vez hoy sí". Fui tan tonto al pensar que me extrañarías o que pensarías en lo mismo: "¿Me escribirá esta noche?", "¿Los dos estaremos pasando por lo mismo?", "¿Lo estoy haciendo bien...?", cada maldita noche.</p>
+
+            <p>Cuando todo se vuelve oscuro, en la noche, era cuando más esperaba que aparecieras como una luz en mi vida. Pero, por lo que me contaste cuando nos vimos, me dejaste clara una cosa: ¿cómo pudiste mentirme en mi propia cara? Decir que yo era alguien en tu vida, que yo era importante, para luego demostrar que nuestro tiempo juntos no significó nada. Y no vengas luego a decir: "Yo sí te quería", "Yo sí te amaba", "Eras muy importante para mí". Lo que más me demostraste tras el tiempo que estuvimos juntos es que todo eso fue insignificante, y te lo dije: no te atrevas a decir que me amabas. Vaya mierda, ¿cómo se puede amar tan poco? Ni con todo el odio, el desprecio ni por más que pensara mal de ti pude deshacerme de lo que sentía; me tomó meses, más de un año, e incluso ya sabiendo que habías hecho más cosas después de la ruptura me costó quitarme el sentimiento. No sé si hiciste todo eso para que yo pudiera alejarme de tu vida; felicitaciones, supongo que lo lograste.</p>
+
+            <p>Disculpa mis palabras, será lo único de "desahogo" que habrá en esta conversación. Realmente fue muy confuso todo lo que hiciste de inicio a fin: primero decir que ya no existía nada —ni amor, ni cariño, ni ganas de intentarlo—, entrar en una nueva relación, parecer que todo estaba bien contigo y, luego, volver a verme y decirme que la estabas pasando mal, que todavía sentías algo por mí y que no querías verme como un simple "amigo", cuando antes habías actuado como si no me conocieras o como si fuera un simple extraño. Tus acciones, tus palabras e incluso tus sentimientos no concordaban en nada, y simplemente me hacían dudar más de ti y de lo que significó para ti todo esto. Y me disculpo sinceramente contigo por el texto que te mandé después de esa salida; pude haberlo dicho de mejor forma, pero realmente no supe expresarme mejor. Hacer eso me hizo darme cuenta de que aún existía algo de ¿rencor?, ¿tristeza?; por eso, cuando nos vimos, traté de explicártelo de buena manera y pasó todo lo que pasó.</p>
+
+            <p>Después de esa salida, vinieron las pláticas. Quiero hacer mucho énfasis en esto y quiero que tengas muy presente lo que te estoy diciendo: con el paso de los días fui pensando mejor todo esto, no solo lo de tu otra "relación" con otra persona, sino el hecho de que hayas vuelto. No es la primera vez que lo haces y, aunque digas que no, siempre que nos hemos separado es sorprendente que vuelvas cuando las cosas no te salieron bien. ¿Por qué? ¿Soy acaso alguien a quien solo acudes cuando te está yendo mal? ¿Por qué no pudiste llegar cuando en tu vida te estuviera yendo bien? Exacto: si las cosas te hubieran salido bien, ni siquiera habrías pensado en hablarme o en saber algo de mí. Por eso mismo no quise seguir con esto; lo que fue esta "Relación" no fue por amor, no fue por querer conocerme ni por ver si podíamos ser compatibles, o simplemente fue un error desde el principio volver a estar juntos. Lo hablé contigo, te di las razones y te expliqué siempre de la mejor manera por qué no quería seguir contigo en esos momentos, y no solo te culpé a ti: también te dije lo que yo estaba haciendo mal y lo que estaba fallando en la relación. Pero parecía como si con eso te estuviera haciendo lo peor del mundo, y me decías: "Me diste esperanza", "Mi vida ya está yendo muy mal, por favor dame una razón para no morir". Escucharte decir eso... fue un punto en el que tenía que ver tanto por ti como por mí. Yo también me sentí solo y sigo sintiéndome solo, pero en todo lo que pasé —noches horribles, momentos malos e incluso cuando toqué fondo y solo esperaba morir o que ya todo pasara—, en esos momentos, ¿dónde estuviste?, ¿tú qué hiciste por mí? En ese tiempo en que se suponía que debía haberme enfocado en mí, haber puesto límites y haberme alejado, simplemente no lo hice y decidí tratar de estar para ti, entenderte y ayudarte. Pero yo también me sentía mal por lo que hiciste durante el tiempo en que no nos vimos; quise olvidarlo y quise aceptarlo, pero estando juntos y con el estado en el que te encontrabas todo se volvía muy complicado. Yo te pedí una sola cosa: no quería que te sintieras culpable, que te insultaras ni que la pasaras mal; solote pedí una disculpa, una disculpa sincera, y quería verte cambiar. No cambiar por mí, sino por ti. Lo creas o no, todo mejora si haces las cosas diferentes y te enfocas más en ti; y esto no lo digo por mí ni por lo que "pasé", sino por lo que pude ver de ti en este tiempo. Pero ya hablaré de eso más adelante :).</p>
+
+            <p>Las primeras veces preferí no estar en una relación al saber que estabas conmigo por un sentimiento de soledad. Sabiendo todo lo que iba a pasar después, preferí terminar las cosas antes de que avanzaran más, pero simplemente no lo querías aceptar. Yo te di mil y un razones, e incluso te propuse darnos un tiempo en el que te prometí que te iba a esperar (aun después de todo lo que pasó, te prometí exclusividad y que seguiría trabajando en mí, en mi universidad y en mis sueños), pero tú te mostraste tan reacia a querer hacer eso. ¿Por qué? Antes de que todo empeorara o llegáramos a un punto donde todo terminara definitivamente, ¿por qué no elegiste algo que nos beneficiara en un futuro? Pero claro, era obvio: las cosas no podían ser sencillas. En ese momento entendí que, si todo seguía así, esto no iba a terminar bien para mí. Y no digas que no lo hablé contigo; yo siempre te mencioné lo que me hacía sentir mal, te pedí que hicieras algo al respecto y simplemente no hiciste nada. Te di tiempo y respeté que te sintieras mal; me dijiste que octubre, noviembre y diciembre tenían un mal significado para ti y me esperé, aunque ya sabía cómo iba a resultar todo. Mi plan, o lo que quería lograr, era arreglar todo hablando o, si no había solución, al menos terminar de buena forma y en paz, siguiendo cada quien su camino. Sin embargo, en caso de que la plática no funcionara, ideé otra forma que no me agradaba seguir, pues sabía que no tenía la fuerza suficiente para terminar contigo y alejarme. Me dolía hacer eso y ver que te pusieras tan triste y lloraras; en vez de entender las razones, simplemente te negabas y me quitabas la opción de decidir si quería quedarme o alejarme. Sabiendo que no podía negarme ante ti y que, de alguna u otra forma, una parte de mí quería quedarse a tu lado, pero consciente también de que no era lo correcto, preparé ciertos escenarios para hacer que tú misma decidieras no seguir conmigo.</p>
+
+            <p>¿Nunca te preguntaste en algún momento: si yo te prometí ser un "libro abierto" para ti, por qué hice todo eso?, ¿por qué estaba todo eso escrito? Estaba consciente de lo que te había prometido; por eso escribí ciertas cosas y el plan era mostrártelas yo mismo. Varios escenarios fueron creados sabiendo que, si veías eso, probablemente dirías: "¿Por qué estoy con alguien así? ¿Por qué siquiera pensé en volver a hablar con él?". Planeaba que fuera una sola cosa la que vieras escrita ahí, pero me parecía llegar demasiado lejos y simplemente lo mantuve guardado en caso de que ya no tuviera más opciones. Cuando platicábamos y no lograba llegar a ningún acuerdo, simplemente escribía otra cosa y la mantenía como una alternativa; pensar que incluso llegué a considerar la idea de mentir diciendo que ya estaba conociendo a alguien más, sabiendo que lo que menos quería era estar en otra relación. Al final, todo eso era muy extremo y sonaba demasiado cruel, así que decidí mantener la idea de resolver todo mediante la plática y, sin darme cuenta, todo lo que escribí siguió guardado; hasta yo olvidé que existía. Por eso, cuando me pediste mi teléfono, acepté sin duda alguna, ya que en la realidad no había pasado ni había hecho nada; aquello que había escrito en su momento fue algo que ya no recordaba cuando ocurrió eso, y por ello estaba tan desconcertado con tu reacción.</p>
+
+            <p>Y no te preocupes, me aseguré de que todo lo que tenía que ver contigo no lo tuviera nadie más que yo; incluso tomé los teléfonos de mis amigos para preparar esos escenarios y me encargué de borrar todo de ahí apenas estuvo listo.</p>
+
+            <p>Al descartar la primera idea, la segunda —y por la que finalmente opté— fue cambiar mi forma de actuar ante ti. Si no podía irme porque tú te sentías mal —incluso cuando me pedías que me enojara contigo o que te dijera un montón de cosas, siendo que, la verdad, aun cuando peor me sentí, nunca llegué a pensar en insultarte ni gritarte—, entonces, para que tú no te sintieras mal ni pensaras que eras el problema o te culparas a ti misma, preferí cargar con esa culpa yo solo. Así que empecé a actuar y a comportarme como lo hacía antes y dejé de hacer muchas cosas: comprar regalos, proponer ideas, dar mucho cariño, contar las cosas que hacía, además de tardarme en responder... Agh, hasta el último momento odié hacer eso; era horrible tener que contenerme o comportarme como antes, tener que recurrir a algo así porque no podía simplemente irme y dejarte en ese estado... Pensé que con eso tú decidirías irte por tu cuenta al no ver mejoría o al notar que todo se repetía otra vez... ¿Por qué no lo hiciste? Incluso cuando teníamos las pláticas sobre seguir juntos, yo mismo te mencionaba mi actuar y mi forma de ser; fui tan directo con eso: "¿Por qué aceptas esto?". Varias veces te di la razón, ni siquiera traté de ocultar que sabía cómo estaba actuando, y ni siquiera con eso fue suficiente.</p>
+
+            <p>Y ni siquiera con todo eso se pudo llegar a un final. No quería hacer algo que doliera tanto; solo quería que fuera un trago amargo que no pasara de ahí, donde simplemente pensaras: "Hubiera sido mejor no volver a hablarle", "Yo quise que se quedara porque me sentía mal; las cosas no estaban bien en mi vida y por eso acepté todo eso". Con ello simplemente me darías la razón de que haberme elegido fue únicamente por un sentimiento de tristeza, soledad, melancolía y por sentir que yo ya te conocía...</p>
+
+            <p>Llegados a este punto, no sé si debería agradecerte por haber tomado mi teléfono y haber encontrado todo eso, aunque el plan original era que solo vieras una conversación y, al final, viste casi todas.</p>
+
+            <p>Seguía decidido a arreglar todo hablando, aunque con cada plática que pasaba te iba importando menos y simplemente me hacías de lado, hasta que llegamos a ese punto. Pero supongo que te lo agradezco: gracias a ti, justo en ese momento en que me reclamaste todo eso, hiciste que un plan que ya no pensaba usar y que había dejado de lado se pusiera en marcha y tuve que apegarme a esa idea inicial. Fue como si un viejo engranaje que solo estaba acumulando polvo volviera a moverse de repente, haciendo girar todas las demás piezas con él. Entonces empezaste a lanzarme varias cosas en cara: mi actitud, que no había cambiado nada, que me había vuelto peor, que era la peor persona del mundo y cuanto insulto se te ocurrió en ese momento. Por más que me hubiera gustado no seguir ese plan, no me quedó otra opción que continuar adelante con él. Tuve que aguantar tantos insultos y todavía recibir un "No valía la pena", además de no sé cuántas cosas más que te dio por decir, como que a mí me "molestaba" el hecho de que tú ya no fueras mía y que me gustaba poseerte o tener el control sobre ti. Agh, incluso en ese momento no pude disimular la cara de disgusto: ¿de dónde te salía tanto ego para creer que eso era real y que todo lo demás era cierto? Es increíble cómo puedes pasar de la tristeza al punto de insultar y actuar de esa forma. Qué increíble que para ti y para todo lo que hacías siempre hubiera justificación, diciendo cosas como: "Es que otras parejas han hecho cosas peores y ahí siguen"; pero, si el problema viene del otro lado, entonces soy un maldito, un estúpido y, por alguna razón, me echas más culpa a mí de la que eres capaz de asumir tú. Incluso tú misma sabes que lo que haces está mal, pero si otra persona hiciera lo mismo, lo mejor que atinas a responder es: "¿Solo porque yo actué así significa que harás lo mismo?". Era tan desesperante que ni siquiera reflexionando en eso pudieras darte cuenta de tus acciones y de tu forma de ser. Y yo sabía que en algún punto me echarías la culpa diciendo que me aproveché de ti porque te estabas sintiendo mal y no pudiste pensar bien las cosas.</p>
+
+            <p>Incluso sabiendo eso, quise que no fuera el caso y te di la opción de elegir de buena forma. Te dije: arregla tu vida primero, cambia todo lo que necesites en ti, pero no para agradarme a mí, sino para agradarte a ti misma y para que tu vida sea disfrutable. Eso no significa que las cosas no vayan a doler o que todo será más fácil, pero ya sabrás cómo reaccionar cuando algo llegue a alterar tu paz. En el momento en que estés bien contigo misma, verás que la soledad no es tan mala, porque realmente nunca estarás completamente sola; y en ese recorrido, mientras te vas sintiendo mejor, llegarán personas a tu vida, harás nuevas amistades y crearás nuevos momentos. Cuando menos lo pienses, ya habrá pasado el tiempo y tú estarás bien, te lo prometo. Aunque ya no reconozcas a la persona que fuiste antes, habrás cambiado mucho —aunque no lo parezca— y tu entorno será el reflejo de tu propio ser. En ese momento, o incluso antes, llegarás a cuestionarte sobre las relaciones: ¿por qué quieres estar en una relación? ¿Por soledad? ¿Extrañeza? ¿Melancolía? ¿Cariño?... Cada uno forma su propio sentido y busca eso en otra persona. Por eso, cuando te dije lo que yo buscaba al estar en una relación y tú —aunque antes de eso no habías sabido responderme— dijiste que querías lo mismo, no es que no te creyera, pero me costaba creer que lo hubieras adoptado tan rápido, porque lo que demostraste no coincidía con lo que decías "querer" al estar con alguien más. Entonces, ¿quién eres? Si un día todo se viene abajo y empiezas desde cero, ¿quién eres sin las personas que estuvieron contigo? Fue una pregunta que incluso a mí me costó bastante responder y darle un significado. Por eso mis metas ahora son más personales y lo que quiero es más firme; por eso mismo no me fui por las primeras opciones que se me cruzaron o que parecían "buenas". Y era algo de lo que quise hablar contigo cuando nos vimos: en quiénes nos habíamos convertido y a qué aspirábamos. Por eso la pasé tan bien contigo al principio, porque parecías diferente y quería conocerte.</p>
+
+            <p>Y ya que llegamos a este punto, ¿por qué? ¿Por qué hiciste todo esto? No solo no logré que nos tomáramos un tiempo para pensar mejor las cosas y que nos fuera bien, sino que ni siquiera pudimos empezar bien. Tú misma dijiste que todo se había destruido, que no existía nada para querer continuar y que todo lo que llevábamos, todo lo que construimos, se derrumbó. Y yo me quedé con eso; por eso, cuando nos vimos, no podía creer todo lo que estabas diciendo: que no podíamos ser amigos, que no me podías ver como un amigo. ¿En serio? ¿No me podías ver como un amigo, pero sí tratarme antes como a un desconocido al cual no conocías y con quien ni siquiera hablabas? ¿Y así querías que las cosas fueran diferentes? No solo eso: seguías manteniendo los mismos patrones y las mismas conductas. Yo te dije y te mencioné lo que tenías que tomar en cuenta; ¿ni siquiera en estos años pudiste detenerte a pensarlo? No cambiaste absolutamente nada; seguías siempre con lo mismo y ni siquiera parecía importarte. ¿Realmente no pudiste darte cuenta de tus acciones? ¿Jamás te pusiste a pensar en que lo que hacías también dolía? Pasaste tanto tiempo criticándome para que, al final, tú ni siquiera pudieras darte cuenta de todo lo malo que hacías y decías. Todo aquello por lo que alguna vez te quejaste de mí, tú también lo repetías; y lo peor de todo es que me echabas más la culpa a mí, diciendo que la mayor parte del tiempo yo era la razón de que estuviéramos mal. Siempre pudiste ver el punto de quiebre, pero nunca pudiste ver qué lo causó. Aunque sé que nunca obtendré respuesta, quiero preguntarte: ¿en serio no sientes ni una pizca de remordimiento por tu forma de ser conmigo? ¿Es tan difícil para ti incluso decir perdón o reconocer que actuaste mal? Me pedías entenderte y que te escuchara, pero ¿cuándo me entendiste tú a mí? ¿Cuándo trataste de comprenderme? ¿Cuándo siquiera te importé? En todo este tiempo me sentí reemplazable; no me sentí querido ni escuchado, ni sentí siquiera que fuera lo suficientemente importante para ser elegido o para pedir tu cariño... Fui la segunda opción, el plan de reserva que sale cuando todo lo que haces va mal; y ya lo has hecho no una vez, sino dos veces... Y yo no pedí que te sintieras mal por eso; no te pedí que te lamentaras, ni que te insultaras, ni que hicieras algo día con día. Lo único que pedí, la única maldita cosa que pedí, fue una simple disculpa, para que, mientras íbamos rehaciendo nuestras vidas juntos, pudiéramos disculparnos. Por eso me encargué de hacer que todo estuviera bien, para así poder darle toda mi atención a lo que importaba. Incluso si tomaba tiempo y empezábamos con lo más difícil, eso haría que se construyera algo sólido, algo que no se pudiera siquiera agrietar; por eso yo mismo decidí empezar con lo complicado y poner en orden mi vida. ¿Fue tan difícil para ti hacer lo mismo? O tal vez lo que tú querías hacer y lograr ya era muy diferente a lo que yo quería; por eso buscaba ver si seguíamos siendo compatibles o si tan siquiera lo fuimos desde el principio. Me criticabas por burlarme de ciertas cosas y te sentías mal por ello, pero tú también te burlabas de lo mío y ni siquiera lo vi mal, porque pensaba: "Así eres tú". Y para mí, esa frase no significa algo negativo: me gusta que seas tú y que puedas decirme lo que piensas de ciertos temas; incluso si estamos en desacuerdo, no significa que esté mal, sino que podemos reírnos de nosotros mismos y de lo que decimos, pero respetando siempre lo que hacemos y lo que pensamos. Si nos tomamos todo de forma tan seria, simplemente volveremos a pelear y a discutir de mala forma una y otra vez; pero parece que nunca pudiste verlo de esa manera. ¿Por qué no podíamos arreglar algo mientras nos reíamos y hablábamos?</p>
+
+            <p>Yo fui consciente de lo que hacía, de lo que repetía y de cómo me comportaba, y eso me iba matando cada maldito segundo. Odiaba cómo me comportaba antes y cómo hablaba, pero ¿qué más podía hacer cuando ni siquiera podía irme? Hablé bien, traté de razonar y de llegar a un acuerdo: tomarnos un tiempo, prometerte exclusividad, esperarte más tiempo del que ya te había esperado... Pero ni siquiera eso funcionó, porque decías que te ibas a sentir mal y que no querías "perderme"; sin embargo, no podías cambiar tus actitudes ni ver tus propios patrones, y seguías haciendo todo aquello por lo que alguna vez me criticaste. Yo no quería verte llorando; yo quería que todo lo pudiéramos hacer de buena forma, quería apoyarte, llevarte a fiestas de amigos, ser tu soporte y que pudieras confiar en mí. Pero se supone que en el pedir está el dar; ¿qué hiciste tú en cambio? No me diste seguridad, no me aportaste nada nuevo —ni salidas, lugares, momentos o una nueva faceta tuya que yo pudiera conocer—; te enfocaste en muchas cosas, menos en lo más importante: en ti.</p>
+
+            <p>¿Por qué tuve que ser yo de nuevo el malo en esto? Jamás te detuve cuando te quisiste ir el día que terminaste conmigo en mi propia casa; no derramé lágrimas para que no se te hiciera difícil decir adiós. Yo no te pedí vernos una vez más para arreglar las cosas; simplemente quería verte una última vez para poder decir adiós de buena forma... pero ni siquiera me disté esa oportunidad. Fuiste demasiado cruel y ni siquiera parecía que te sintieras mal: pudiste seguir con tu vida, veía tus estados y notaba cómo parecía que ni te afectaba el hecho de ya no estar juntos, llegando incluso a estar con alguien más en todo ese tiempo. Mientras tanto, yo me destruía por dentro: no me cuidaba, no dormía, me malpasaba e incluso pensé en rendirme de todo. Me tomó meses volver a estar bien, ¿y todavía dices que yo fui el que mejor se la pasó, el que mejor estuvo? Fue fácil para ti decidirte en una semana y ni siquiera tentarte el corazón para decirle adiós a lo que sea que tuvimos. ¿Cómo es que para ti fue tan sencillo? ¿Cómo una semana te bastó para ya no mirar atrás y actuar tan fríamente, mientras que para mí todo esto que estamos pasando actualmente me está dejando al borde del colapso? Me duele, y ni siquiera puedo acabar con este tonto sentimiento de amor por ti. Siento que soy un idiota por sentir todo esto y no poder hacer lo que hiciste tú en su momento. Tengo ansiedad a cada rato; no puedo desconcentrarme ni un solo segundo ni tener tiempo para mí porque sobrepienso todo esto y simplemente me dan ganas de llorar. Tener que actuar como el malo otra vez y forzarme a mí mismo a no decir tantas cosas para que no tuvieras una dependencia hacia mí y ya no te doliera el hecho de no estar juntos... Realmente me importó tanto esto que ni siquiera quise que tú te vieras como la mala, sino tomar todo eso y dejar que mejor se convirtiera en odio hacia mí; así, tú ya no te sentirías mal si esto acababa. A mí me dolía tener que hacer esto, y sigo cuestionándome cómo es que a ti te resultó tan sencillo, mientras que a mí me tomó meses e incluso años poder llegar a esto, aguantando todavía insultos y desprecios... Quisiera quedarme o tratar de hablarlo contigo, pero, sinceramente, ni siquiera vale la pena cuando no puedes ver tus propios errores ni disculparte. ¿Esperabas algo nuevo cuando seguías actuando igual y teniendo todas esas actitudes? ¿De qué me sirve esforzarme por alguien que ni siquiera pudo hacer un poco de introspección y darse cuenta de lo que sus acciones hacían o de lo que sus palabras provocaban? Me pides que me quede, que te escriba yo primero, que te dé salidas para hablarlo, pero ¿sabes? ¿Por qué ahora soy yo el que debe tener consideración contigo, cuando tú ni siquiera pudiste hacerlo conmigo? Pudiste irte cuando quisiste y regresar cuando querías porque jamás te lo negué y siempre te tendí la mano; en cambio, tú me negaste vernos o hablar más, me trataste con desprecio y frialdad, y siempre hubo justificación para ti: "Es por mi salud mental", "Nada de lo que digas cambiará lo que pasó", "Es el resultado de tus acciones".</p>
+
+            <p>Pero, cuando la situación fue al contrario, lloraste, me dijiste insensible, que no te comprendía, que no podía dejarte sola, que el mundo era muy feo y que íbamos a acabar solos cuando podíamos estar el uno para el otro; o la más usual: que yo quería "deshacerme de ti", e incluso mencionabas lo de acabar con tu propia vida y que era una posibilidad. ¿Por qué creíste que hacer y decir eso estaba bien? Yo pude entenderte a ti: no estabas bien, no te sentías bien, era por tu salud mental; todo eso lo entendí, lo respeté y estuve de acuerdo con ello, aunque me tomó tiempo asimilarlo. Incluso cuando se te presentó la oportunidad de intentar algo con alguien más o volver a intentarlo conmigo, fui la segunda opción, y creo que hasta eso está bien; al final, no puedo obligarte a elegirme. Pero, si todo era increíble en esa relación, si te enseñó mejores cosas que yo, mejores momentos y más amor, ¿por qué decidiste volver conmigo? ¿Por soledad? ¿O porque ya era alguien a quien conocías bien? Eres demasiado cruel al hacer todo eso y luego volver y decir que hay amor y que siempre lo hubo. ¿Qué clase de amor es ese? ¿Estamos en una relación abierta? ¿Hiciste eso porque te dije lo de "conocer a más personas"? ¿Lo elegiste por amor? Son preguntas de las cuales no quiero ni me interesa saber la respuesta, aunque me causen dolor. Mi cuerpo ha sido enteramente tuyo y mis labios también; pensaste muchas cosas de mí, aunque no fueran ciertas. Pensar que lo que creíste de mí y de lo que yo haría no se cumplió... y lo que yo creí sí pasó. No es que esté mal, pues ya no éramos pareja, pero debiste entender que eso significaba que habías elegido que ya no estuviéramos juntos. Como te dije: si todo te hubiera salido bien, ¿para qué me habrías elegido? Es por eso que no sentí amor cuando volviste; no sentí confianza, no sentí que fuera importante. Me sentí como una opción, un plan B, alguien tan reemplazable. Me sentí solo todo este tiempo, no tenía un lugar seguro y tampoco me sentía bien; mientras más pasaba el tiempo contigo, más empezaba a derramar lágrimas y después a llorar. ¿Por qué fuiste así? Si es así como quieres ser y cómo quieres vivir tu vida, entonces ya no hay necesidad de que yo permanezca en ella.</p>
+
+            <p>Pero no por todo esto me haré la víctima ni diré que fui quien más sufrió: yo también te herí, me porté horrible contigo, dije cosas que hieren, te hice sufrir e hice que no te sintieras bien contigo misma. No me considero una víctima en esta relación pero espero y tú tampoco te consideres una.</p>
+
+            <div class="divider">&#10022; &#10022; &#10022;</div>
+
+            <p>Me disculpo por todo lo que hice antes de que termináramos.</p>
+
+            <p>Perdón por no decirte lo bonita que eras siempre que te veía en persona o en foto; eras realmente hermosa y me hacías sonreír siempre al verte.</p>
+
+            <p>Perdón por cada lágrima que derramaste; debí controlar mejor mi actuar y lo que decía para que no tuvieras una relación tan agridulce.</p>
+
+            <p>Perdón por actuar distante, serio, frío, cortante e insensible contigo; muchas veces no sabía expresarme y solo terminaba arruinándolo más por no poder hablar mejor las cosas contigo.</p>
+
+            <p>Perdón por hacerte enojar y desesperarte; no quería llegar a esos extremos ni que tú pasaras un mal rato por los momentos en los que yo explotaba.</p>
+
+            <p>Te pido perdón por cómo me comporté durante este tiempo que estuve contigo. Aunque llegar a eso fue mi última opción, no justificaré lo que hice ni diré que estuvo bien; te hice pensar muchas cosas e incluso volví a ver tu rostro llorar... cuando lo único que buscaba era una plática donde los dos pudiéramos hablar con tranquilidad y llegar a un final en el que ambos estuviéramos de acuerdo y en paz.</p>
+
+            <p>Te pido perdón por el mal rato y por los recuerdos que reactivé en ti al leer todo esto. Por la desesperación de sentirme acorralado, hice cosas que te lastimaron y algo así es difícil de borrar; por eso la mejor disculpa es simplemente irme y hacer que tu vida sea más sencilla, sin problemas ni tristezas, siendo mi única opción restante marcharme.</p>
+
+            <p>Te pido perdón también por todas esas pláticas en las que no supe decir adiós; simplemente, por mi debilidad al verte llorar, no supe qué más hacer y no pude tomar a tiempo una decisión que habría dolido menos que todo esto.</p>
+
+            <p>Te pido perdón por quitarte tu tiempo y por haber permanecido a tu lado cuando pudiste haber tenido mejores experiencias, mejores momentos y mejores personas contigo; por eso mismo, no te quitaré más tu tiempo ni me quitaré más el mío con todo esto.</p>
+
+            <p>Me imagino que después de leer esto tendrás muchas cosas que decir —quejas, insultos, preguntas— o mucho que procesar. Lo mejor que puedo hacer ahora es darte tu espacio para que no tengas que seguir lidiando conmigo. Y no te preocupes, me aseguraré de no entrometerme en tu vida a partir de ahora. Para el momento en que termines de leer esto, yo ya me habré ido; incluso si tratas de contactarme o ver mis perfiles, ya no te aparecerán ni tendrás forma de acceder a ellos, lo que también incluye que yo tampoco pueda ver los tuyos. Es más, si algún día no quieres verme ni en persona, te aseguro que, si sé que estarás en algún lugar al que yo también vaya a ir, quien se dará la vuelta y se marchará seré yo.</p>
+
+            <p>Por eso mismo he elegido irme de aquí apenas reciba mi título. No tengo razones para seguir aquí ni quedarme; ya tengo una oferta y, apenas termine mis estudios, me iré de esta ciudad, así ya no tendrás que molestarte ni preocuparte ^^.</p>
+
+            <p>Lo cual se me hace raro de decir, ya que siempre planeé llevarte conmigo a todos lados y pensaba que, en todo lo que construyera o lograra, tú estarías ahí para celebrar nuestros logros juntos.</p>
+
+            <p>Como te mencioné, todo esto no fue más que el resultado de todas tus decisiones; no fueron malas en sí, ya que no se puede decir que algo sea totalmente blanco o negro, sino que simplemente todo nos llevó hasta aquí. Te dije que era mejor tomarnos un tiempo y llevar las cosas con calma; tú querías que nos tratáramos como antes —o incluso mejor—, sin darte cuenta de que ya no había nada a lo cual regresar ni qué extrañar: yo ya no sigo siendo esa persona y tú tampoco lo eres.</p>
+
+            <p>Aunque dijiste que seguías siendo igual y que no habías cambiado, desde mi punto de vista —como alguien que te conoció desde la secundaria y pudo estar a tu lado—, puedo decir que realmente habías cambiado. No eres la persona que llegué a conocer y tampoco puedo decir que sigas actuando o pensando igual, y eso fue justamente lo que me intrigó: quería seguir conociendo esa nueva etapa de ti, porque veía a alguien más enérgica y feliz. Lamentablemente, seguías cargando con problemas que ni siquiera te pertenecían y manteniendo la misma mentalidad; no pudiste poner en orden tu vida, y en eso seguías igual. Parecía que tenías tiempo para enfocarte en los problemas de los demás y para creer que tú estabas bien o que eras quien más había sufrido; decías que sabías estar sola, pero ni siquiera parecía que realmente pudieras sentirte feliz en tu propia soledad. Para poder ser dos, primero hay que saber ser uno, y, por lo que vi, no son cosas en las que hayas reflexionado antes; ¿y así querías construir algo nuevo o mejor? Algo que siempre pude ver en ti fue un enorme potencial para hacer las cosas que te gustan y lograrlas. Cuando nos conocimos y supe más de ti, me impresionó cómo hablabas de ser independiente y de hacer todo por tu propio bien; fuiste como una guía para mí. Incluso aunque decías que yo fui quien te metió en todo esto y que te "moldeé", sin darte cuenta yo también iba aprendiendo de ti: mejoró mi escritura, mi forma de comunicarme, cómo expresarme e incluso cómo pensar; todo eso lo aprendí de ti. Íbamos creciendo a la par, y por eso te dije: "Somos un desastre, pero al menos éramos un desastre juntos". Quería seguir aprendiendo de ti hasta que todo estuviera bien, pero, por lo visto, las pláticas no bastaban para arreglarlo. Seguimos posponiendo temas y conversaciones incómodas o dolorosas cuando lo único que lográbamos con ello era empeorar las cosas hasta llegar a un punto de no retorno, pudiendo haber enfrentado todo lo difícil primero y dejar después que lo fácil y lo tranquilo guiara el rumbo de esta relación.</p>
+
+            <p>No diré que esto fue una pérdida de tiempo, porque lo significaste todo para mí y aprendí mucho, tanto de lo bueno como de lo malo. Como dije, fuiste una guía para mí, la luz de una estrella que yo perseguía para poder brillar tanto como ella lo hacía. “Mientras perseguía el brillo de esa estrella, logré no perder la dirección de mi vida; e incluso si esa luz ahora se ha atenuado, el camino que he recorrido hasta aquí no se convierte en una mentira. Por supuesto, ahora la luz de esa estrella ya no puede servirme de guía”.</p>
+
+            <p>Para mí, el positivismo jamás ha consistido en verlo todo de forma positiva —eso sería absurdo, pues no significa que los malos pensamientos o deseos desaparezcan—; para mí significa no dejarse sacudir por los pensamientos negativos. No se trata de evitar sentir emociones negativas, sino de no dejarse dominar por ellas. Nadie es perfecto, y por eso mismo, de entre todas esas emociones negativas e incluso del peor día que puedas tener, la esperanza más brillante siempre florece desde la desesperación más profunda y oscura.</p>
+
+            <p>Te menciono esto porque, de todo lo que me dijiste en su momento, hubo algo que cobró sentido hasta después: cambiar toma tiempo, y más si eres terco y no puedes verlo por ti mismo. Me tomó más tiempo del esperado soltar todo el rencor, dejar atrás los pensamientos negativos y superar mis propios problemas. Me di cuenta de que, si quería establecerme en un lugar donde hubiera paz y tranquilidad, primero debía encontrar esa paz y tranquilidad dentro de mí. Fue un proceso extremadamente largo, doloroso y solitario. Quise rendirme muchas veces y en otras ocasiones sentía que el proceso ya había sido demasiado pesado; quería ser feliz y que las cosas cambiaran de un día para otro, rogando por ayuda o deseando que todo volviera a ser como antes, recordando momentos donde fui feliz aunque hubiera varios problemas, instantes que debí apreciar más, o culpándome por las decisiones que tomé. Por eso te dije que pasé por todas las etapas del duelo, y eso no significaba que mi intención fuera ya no estar contigo: primero me odié a mí mismo por todo lo que te hice; después te guardé rencor a ti por todo lo que me hiciste y por todo aquello de lo que me culpabas sin darte cuenta de que tú también lo hacías, aunque a tu manera. Si bien eso solo representaba la ira, también hubo tristeza, negociación, negación y, por último, la aceptación de todo. Hasta que reconocí mis errores y pude trabajar en ellos, logré ver las cosas desde un punto neutral: ya no te culpaba más a ti ni a mí, e incluso comprendí que muchas cosas se habrían podido resolver fácilmente con una buena comunicación y disposición de ambas partes; pero, a estas alturas, ¿de qué sirve seguir culpándote a ti o culpándome a mí?</p>
+
+            <p>Me sorprende que te sigas insultando a ti misma cuando te he pedido que no lo hagas; resulta hasta doloroso ver que no puedo hacer nada para que dejes de hacerlo. Por lo que veo, y por más que lo negaras o dijeras que no era lo mismo, todos pasamos por las mismas etapas. Incluso me recuerda un poco a lo que yo llegué a vivir; por eso traté de hablarlo contigo de la mejor manera posible en su momento, para evitar que te dijeras tantas cosas hirientes y que después llegaras al punto de pensar: "No sé siquiera por qué me dije todo esto". Aunque, a estas alturas, creo que ya no puedo meterme más en eso.</p>
+
+            <p>Me pediste que te dijera si algo andaba mal y si podías ayudar en algo, cuando en casi dos años ni siquiera recibí esas dos palabras que tanto te pedí al inicio; pero supongo que para ti yo soy y seré siempre una persona mala, horrible e insensible.</p>
+
+            <p>Creo que ya dije lo suficiente. Incluso haciendo esto, ni siquiera espero que te des cuenta de tus acciones o de lo que has estado haciendo todo este tiempo. No sé por qué no me fui simplemente desde el primer momento en que algo no me gustó; fui demasiado estúpido al pensar que realmente cambiarías o que te comportarías de una manera más madura. La comunicación es importante, pero no sirve de nada si no se hace algo al respecto; llorar, sentirse mal, enojarse o ponerse a la defensiva solo provoca que días enteros de pláticas no lleguen a ninguna parte y que todo vuelva a repetirse.</p>
+
+            <p>Yo quería elegirte, Valentina; quería que fueras tú, no por lo que fuimos, ni por miedo a estar solo, ni por melancolía, posesión o por pensar que ya te conocía, sino porque quería conocerte de verdad. Lo que pude ver y conocer de ti antes de todo esto fue lo que más me llamó la atención. Incluso con todas las peleas y discusiones, más allá de todo eso, las pláticas, el cariño, el amor que podíamos darnos, la atención y el ver que podíamos hablar de tantos temas sin parar... hacían que siempre me preguntara si esa versión de nosotros podría quedarse. Podríamos haber sido muy felices empezando poco a poco, recuperando la confianza entre nosotros, con nuestros amigos, la familia, etcétera. Pero, en vez de eso... quisimos apresurar las cosas y obtener todo por el camino fácil, quisimos correr cuando todavía ni sabíamos mantenernos en pie...</p>
+
+            <p>Ese día casi te perdí. ¿Sabes lo que se siente no tener voz? Ni siquiera podías escuchar mis gritos pidiendo ayuda o consuelo ante todo esto, y todo lo que obtuve fue silencio. ¿Siquiera pensaste en todo lo que tú me causaste? Dijiste que te quedarías y luego te alejaste, ¿lo olvidaste? Dijiste que haríamos bien las cosas, que nos arreglaríamos con todos y que al final estaríamos bien los dos...</p>
+
+            <p>Pero ¡¿cómo se supone que siquiera iba a saber que te importo un carajo?!</p>
+
+            <p>Cuando todo lo que has hecho es irte, cuando casi nunca piensas en mí y toda gira en torno a ti y a lo que yo te he hecho, ¿ahora resulta que ni siquiera puedo alejarme después de todo esto?</p>
+
+            <p>Cuando te fuiste, yo pensé que había sido PARA SIEMPRE. Ni siquiera se te ocurra preguntarme qué salió mal.</p>
+
+            <p>Ninguna de estas razones justifica cómo actué ni puedo reescribir cómo fui. He tenido muchos arrepentimientos en la vida que he llevado hasta ahora —incluso cuando no supe cómo actuar o responder en su momento—, por las cosas que dije y por cómo llegué a ser; por eso te dije que fue un proceso tan doloroso.</p>
+
+            <p>Cumpliré todo lo que querías y que me dijiste alguna vez: "No quiero intentarlo", "No quiero saber de ti", "Ya no existe cariño, amor ni ganas de intentarlo", "No quiero saber si me vuelves a decepcionar", "No existen las ganas en mí de volver a intentarlo". Cumpliendo tus palabras y teniendo en cuenta lo que me dijiste en su momento, tomaré eso como la verdad absoluta, ya que ni siquiera te muestras arrepentida de todo lo que hiciste ni he recibido una disculpa por ello, aunque sí te lo mencioné...</p>
+
+            <p>Una vez más: no quiero ser elegido únicamente porque te sentías sola o porque las cosas en tu vida no salieron como esperabas. No quiero que me quieran de esta forma, no quiero que me quieran tan poco y todavía tener que rogar por un poco de empatía y entendimiento. Qué maldito horror, aunque ya es muy tarde para sentir lástima por mí mismo.</p>
+
+            <p>Si ya no existe nada —o si nunca lo hubo—, si no hay amor ni hay futuro, no tengo necesidad de quitarte más tu tiempo y dejo también de quitármelo a mí. Y como mencionaste hace tiempo: "Hice todo esto porque tú me dijiste que conociera a más personas" —aunque malinterpretaste por completo aquello—, ahora sí te seré claro: puedes estar con quien quieras y de la forma que tú quieras; vive la vida como mejor te parezca. Esta vez ya no planeo seguir ofreciéndote mi mano para que vengas cuando quieras y te vayas cuando quieras. Ya no necesito ningún perdón, ninguna salida ni ninguna plática para tratar de "arreglarlo" o llegar a un acuerdo; esta vez ya no veré tus avances, tus cambios ni cómo continúa tu vida. Perdón por no decirte esto en persona, pero realmente me dejaste sin opciones al amenazarme o justificar todos tus actos. Aun así, espero que seas feliz tal cual eres ahora y que sigas siempre mejorando; que todas tus decisiones te lleven exactamente a donde quieres estar y que tengas mejores momentos. Ni siquiera me siento alguien importante para ti al decir todo esto, así que seguramente seguirás con tu vida de forma normal; eres buena para hacer eso, ojalá yo pudiera hacer lo mismo con tanta facilidad.</p>
+
+            <p>No me sirven las pláticas donde ambos decimos entender lo que hicimos mal pero seguimos actuando igual; vaya desperdicio de tiempo y de lágrimas. No valía la pena razonar cuando ni siquiera eres capaz de hacer algo para cambiar o para no terminar mal. Seguramente lo que querías era esto; pues felicidades: a partir de ahora me alejaré completamente de tu vida. Eso fue lo que quisiste en primer lugar, y no me queda más que aceptarlo con tristeza. Aunque tenga que irme quedando como una horrible persona, supongo que para ti está bien, siempre y cuando no seas tú la del problema.</p>
+
+            <p>No te guardo rencor. Al final, todo lo que hice lo hice por amor y sin esperar nada a cambio. Tampoco me debes nada, y te prometo que todo lo nuestro me lo llevaré hasta la tumba. También te prometo que estaré bien... Aunque ahora no me encuentre bien, lograré todo lo que un día te prometí. Aunque te extrañe o quiera hablarte, te prometo no llamar ni interrumpir en tu vida; ya no tengo nada más que hacer ahí. Y si te sientes sola, puedes estar con alguien más; eres una chica muy linda, así que por falta de personas en tu vida creo que no debería preocuparme. Espero que tus siguientes relaciones puedan darte lo que este amor tan tonto e inmaduro nunca pudo; tú estarás bien pase lo que pase.</p>
+
+            <p>No te preocupes: mis amistades e incluso mis padres ya dieron lo nuestro por terminado desde hace mucho tiempo, y ya no formas parte de mis pláticas ni de mi vida.</p>
+
+            <p>Esta decisión la tomo desde la calma y la gratitud, sin dejarme guiar por la tristeza, el enojo ni porque esté conociendo a alguien más. Desde que terminaste conmigo hasta ahora, no he estado con nadie más ni he intentado nada con nadie y, sinceramente, después de esto creo que necesito un tiempo para mí; por lo tanto, no tengo la intención ni las ganas de conocer a alguien más ni de que me conozcan, por más solitario que sea todo esto. Te agradezco por haber estado tantos años conmigo, por haberme hecho reír y por haberme dado tu aprecio, tu cariño, tu amor, tu atención y tu risa; fui tan feliz, aunque no durara tanto. Gracias por abrirme los ojos; fuiste mi primera y única relación hasta el momento, y una vez más me disculpo por todas mis mentiras, mis comportamientos y mis acciones. Esperaba que siguiéramos creciendo juntos, reconociendo nuestros errores y mejorando a la par; supongo que lo haremos, pero tomando caminos separados. Ya no tienes la obligación de verme, de saber de mí ni de abrazarme; eres libre de mí para hacer lo que quieras. Hago esto porque me preocupo demasiado por ti, tomando esta decisión consciente del estado emocional en el que aceptaste volver conmigo, pues no quiero que estés atada a mí ni aprovecharme de tu tristeza. Por más que hubiera querido que nos quedáramos juntos y fuéramos tú y yo contra el mundo, no me queda más que desearte lo mejor: que sigas siendo tú y que continúes con tu vida riendo, amando y viviendo cada momento como si fuera el último. Cumpliré con tus deseos al alejarme y dejarte vivir tu vida sin intervención de mi parte. Cuídate, Valentina; espero que tus cumpleaños y fechas como Halloween, Navidad, Día de Reyes y todas las demás festividades tomen un nuevo significado para ti y que, sin importar qué pase, seas muy feliz. Te deseo una noche relajante, un día feliz y momentos increíbles en tu vida. Sin importar dónde esté yo, siempre estaré orgulloso de ti y de tu potencial para brillar siempre a donde vayas.</p>
+
+            <h2>Extra</h2>
+
+            <p>Un pequeño espacio de sentimentalismo sobre lo que sentí mientras escribía esto y cuando quise quedarme sin importar nada más.</p>
+
+            <p>Usa tus propias manos para forjar el futuro hacia el que quieres avanzar... ¿Qué se supone que haga con este sentimiento? ¿Qué hago con este vacío que siento por dentro? Aunque quisiera quedarme, es algo que ya no se puede después de todas las decisiones que tomamos los dos. No puedo fingir que no te amo; verte a diario como amiga o como una extraña me duele, porque ya no estamos tratando de conocernos, sino solo de alejarnos. Fueron una tortura para mí todas estas semanas y meses.</p>
+
+            <p class="thought-item">-No soy importante para ti y sé que, en el momento en que alguien más aparezca, yo no seré el elegido. Prefiero perderte ahora a sufrir a diario mientras sigo amándote, teniendo que guardarme todas mis emociones mientras tú rehaces tu vida. La amistad puede volverse amor, pero el amor nunca vuelve a ser amistad.</p>
+
+            <p class="thought-item">-Mientras tú te enfocabas en muchas cosas —haciendo tu vida, riendo, entrenando, pasándola bien—, tú no lo sabías, pero para mí fue el fin del mundo.</p>
+
+            <p class="thought-item">-¿Sabes? La parte más dolorosa y más difícil es decirle adiós a la persona que amas.</p>
+
+            <p class="thought-item">-Quería hablar más contigo; fue lindo mientras duró, creo. Me gustó mucho escucharte hablar. Creo que te quiero más que ayer o quizá menos que mañana, no lo sé.</p>
+
+            <p class="thought-item">-Desde la distancia que tú elegiste al no decidirte, te deseo suerte.</p>
+
+            <p class="thought-item">-Jamás podré guardar rencor u odiar a alguien que eligió lo que creía mejor para su vida.</p>
+
+            <p class="thought-item">-Cuando me hablabas de forma tan cariñosa y me mandabas corazones... eso casi me mataba. Escucharte decir mi nombre y ver tu sonrisa sigue desarmándome de la misma forma. Quería tanto que tú me eligieras para quedarme... Me preguntabas cómo estaba yo, pero ¿cómo podría haber empezado a decirte que debí haberme dado la vuelta y simplemente correr hacia ti? En cambio, solo caí de rodillas y me dije: "Ya es muy tarde para hacer algo al respecto, y no puedo hacer nada si no cuento con el apoyo de mi persona especial".</p>
+
+            <p>Últimamente he estado pensando en que quiero que seas feliz, incluso si no me agrada tomar esta decisión. Por un minuto quise cambiar de opinión, porque nada de esto me parece bien para mí, pero quiero seguir viendo tu sonrisa aunque eso signifique que yo tenga que irme. Entonces, me iré.</p>
+
+            <p>Me costó mucho soltarte en aquel entonces, pero te agradezco por no haber llamado; yo te habría contestado todas y cada una de esas veces.</p>
+
+            <p>Quiero un abrazo. Mis ojos ya casi no me dejan escribir de tan llorosos que están.</p>
+
+            <p>"Algún día es mucho tiempo". Cuando todo esto llegue a su fin, probablemente quiera hablarte, pero sé que para entonces tú ya no querrás que yo esté ahí. ¿Habrá algún día en el que ya no te extrañe como ahora?</p>
+
+            <p>¿Por qué fue tan difícil hablar las cosas y realmente hacer algo al respecto? ¿Por qué fue tan difícil para ti disculparte? ¿Por qué no quisiste hacer las cosas bien? ¿En serio no sientes ni un poco de arrepentimiento por todo lo que has hecho?</p>
+
+            <p>Creo que ahora sí ya fue suficiente. Debería parar... pero no quiero que llegue el día en que tenga que decir adiós para siempre... Esto duele, me va a doler y me sentiré horrible por cómo me comporté, por cómo te comportaste tú y por saber que las cosas se habrían podido arreglar si tan solo hubiéramos enfrentado lo más difícil desde un inicio y hubiéramos ido mejorando día tras día... Y decías que yo era el que iba a estar muy bien: tú vas al gimnasio, te la estás pasando bien, te arreglas... mientras que yo me siento desmotivado, otra vez he dejado de cuidarme, apenas como una vez al día y me siento solo y herido... Pronto todo esto terminará, y espero poder volver a sentirme bien después de todo.</p>
+
+            <p>“Antes de mandarte esto, pasé toda una eternidad tan solo aprendiendo cómo decir adiós... ¿Qué se supone que te diga si este es el final?”</p>
+
+            <p>Y aunque intento comprenderte, hay noches en las que no puedo evitar preguntarme si, de verdad, nada de lo que te dije, de todo lo que te confese, logró tocarte el corazón. Si mis palabras y actos no encontraron lugar en ti, si mis sentimientos fueron tan míos que nuca llegaron a ser un poquito tuyos.</p>
+
+            <p>Esto se mandará de noche muy probablemente; entonces, aquí va mi último párrafo:</p>
+
+            <p>Quisiera que esto no fuera un adiós para siempre, ya que seguiremos viviendo en el mismo planeta y en el mismo continente. Realmente la pasé increíble estando a tu lado; fue un gran viaje de inicio a fin. Fuiste una gran luz y, a su vez, una oscuridad tan relajante. Al menos espero haberte hecho feliz aunque fuera un poco, incluso si todo esto ahora te hace llorar. Si me escuchas tan solo por esta última vez, tengo una última cosa que decirte: aunque todo esto terminó de una forma que espero que ni tú ni yo quisiéramos, ojalá que en los buenos momentos hayas disfrutado de mi compañía. Hubo amor, diversión y risas; no fue perfecto, pero al menos lo intentamos. ¿A quién le importa si estuvo bien o mal?</p>
+
+            <p class="final-signoff">Muchas gracias por todo y buenas noches, Valentina.</p>
+        </article>
+    </main>
+
+    <script>
+        // =========================================================================
+        // LISTA DE 4 CANCIONES EN SECUENCIA Y EN BUCLE (LOOP)
+        // Cuando termina la 1 sigue la 2, luego la 3, luego la 4 y al terminar la 4
+        // vuelve a repetirse desde la 1.
+        // =========================================================================
+        const playlist = [
+            {
+                src: "cancion1.mp4",
+                titulo: "Canción 1 de 4"
+            },
+            {
+                src: "cancion2.mp4",
+                titulo: "Canción 2 de 4"
+            },
+            {
+                src: "cancion3.mp4",
+                titulo: "Canción 3 de 4"
+            },
+            {
+                src: "cancion4.mp4",
+                titulo: "Canción 4 de 4"
+            }
+        ];
+
+        let indiceActual = 0;
+        const audio = document.getElementById('playlist-audio');
+        const muteBtn = document.getElementById('mute-btn');
+        const muteLabel = document.getElementById('mute-label');
+
+        audio.volume = 1.0; // Volumen al 100% por default
+        audio.muted = false; // Música activa con sonido por default
+
+        function actualizarEstadoBotonMute() {
+            if (!audio.muted) {
+                muteBtn.classList.add('playing');
+                muteLabel.textContent = 'Silenciar';
+            } else {
+                muteBtn.classList.remove('playing');
+                muteLabel.textContent = 'Activar sonido';
+            }
+        }
+
+        function cargarCancion(indice) {
+            indiceActual = (indice + playlist.length) % playlist.length; // Si pasa de la 3, regresa a la 1 (índice 0)
+            audio.src = playlist[indiceActual].src;
+            audio.play().catch(() => {});
+            actualizarEstadoBotonMute();
+        }
+
+        // Cuando termina una canción, pasa automáticamente a la siguiente.
+        // Al terminar la 3ra canción, vuelve a empezar desde la 1ra.
+        audio.addEventListener('ended', () => {
+            cargarCancion(indiceActual + 1);
+        });
+
+        // Único botón: solo silencia o reactiva el sonido (la música sigue corriendo siempre)
+        muteBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.muted = false;
+                audio.play().catch(() => {});
+            } else {
+                audio.muted = !audio.muted;
+            }
+            actualizarEstadoBotonMute();
+        });
+
+        // Iniciar desde el primer milisegundo
+        cargarCancion(0);
+        audio.addEventListener('canplay', () => {
+            if (audio.paused) audio.play().catch(() => {});
+        }, { once: true });
+
+        // Si el navegador retuvo el inicio automático, cualquier movimiento o gesto lo activa al instante
+        const eventosDesbloqueo = ['mousemove', 'mousedown', 'pointermove', 'pointerdown', 'touchstart', 'scroll', 'keydown', 'wheel'];
+        function desbloquearAlInstante(e) {
+            if (e.target && e.target.closest && e.target.closest('#mute-btn')) return;
+            if (audio.paused) {
+                audio.play().then(() => {
+                    actualizarEstadoBotonMute();
+                    eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
+                }).catch(() => {});
+            } else {
+                eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
+            }
+        }
+        eventosDesbloqueo.forEach(ev => window.addEventListener(ev, desbloquearAlInstante, { passive: true }));
+
+        // =========================================================================
+        // BARRA DE PROGRESO DE LECTURA Y APARICIÓN SUAVE DE PÁRRAFOS
+        // =========================================================================
+        const progressBar = document.getElementById('progress-bar');
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            progressBar.style.width = `${progress}%`;
+        });
+
+        const elementosTexto = document.querySelectorAll('.letter-content p, .letter-content h2');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.08,
+            rootMargin: '0px 0px -30px 0px'
+        });
+
+        elementosTexto.forEach(el => observer.observe(el));
+
+        // =========================================================================
+        // PARTÍCULAS DE FONDO
+        // =========================================================================
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 1.8 + 0.5;
+                this.speedY = -(Math.random() * 0.28 + 0.08);
+                this.speedX = (Math.random() - 0.5) * 0.2;
+                this.alpha = Math.random() * 0.35 + 0.05;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                if (this.y < -10) this.reset();
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(212, 180, 153, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 40; i++) {
+            particlesArray.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesArray.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+    </script>
+</body>
+</html>
