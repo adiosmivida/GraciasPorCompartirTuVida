@@ -1,3 +1,12 @@
+Analyzed Despedida.html:L1-450
+Analyzed Despedida.html:L451-769
+Analyzed Despedida.html:L1-450
+Analyzed Despedida.html:L451-769
+Analyzed Despedida.html:L670-769
+
+Aquí tienes el código completo de [Despedida.html](file:///c:/Users/norma/OneDrive/Desktop/Adi%C3%B3s/Despedida.html):
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -163,11 +172,17 @@
             max-width: 820px;
             margin: 90px auto 120px;
             padding: 70px 65px;
-            background: var(--bg-card);
+            background: rgba(13, 13, 20, 0.92);
             border: 1px solid var(--border-subtle);
             border-radius: 8px;
             box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
+            overflow-anchor: none;
+            animation: fadeInLetter 0.9s ease-out;
+        }
+
+        @keyframes fadeInLetter {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .letter-header {
@@ -200,14 +215,6 @@
             text-align: justify;
             color: var(--text-primary);
             font-weight: 400;
-            opacity: 0;
-            transform: translateY(16px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .letter-content p.visible {
-            opacity: 1;
-            transform: translateY(0);
         }
 
         /* Section Titles inside the letter */
@@ -220,14 +227,6 @@
             margin: 2.5em 0 1.2em;
             text-align: center;
             position: relative;
-            opacity: 0;
-            transform: translateY(16px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .letter-content h2.visible {
-            opacity: 1;
-            transform: translateY(0);
         }
 
         .letter-content h2::after {
@@ -490,7 +489,7 @@
 
             <p>Perdón por hacerte enojar y desesperarte; no quería llegar a esos extremos ni que tú pasaras un mal rato por los momentos en los que yo explotaba.</p>
 
-            <p>Te pido perdón por cómo me comporté durante este tiempo que estuve contigo. Aunque llegar a eso fue mi última opción, no justificaré lo que hice ni diré que estuvo bien; te hice pensar muchas cosas e incluso volví a ver tu rostro llorar... cuando lo único que buscaba era una plática donde los dos pudiéramos hablar con tranquilidad y llegar a un final en el que ambos estuviéramos de acuerdo y en paz.</p>
+            <p>Te pido perdón por cómo me comporté durante este tiempo que estuve contigo. Aunque llegar a eso fue mi última opción, no justificaré lo que hice ni diré que estuvo bien; te hice pensar muchas cosas e incluso volví a ver tu rostro llorar... cuando lo único que buscaba era una plática donde los dos pudirucimos hablar con tranquilidad y llegar a un final en el que ambos estuviéramos de acuerdo y en paz.</p>
 
             <p>Te pido perdón por el mal rato y por los recuerdos que reactivé en ti al leer todo esto. Por la desesperación de sentirme acorralado, hice cosas que te lastimaron y algo así es difícil de borrar; por eso la mejor disculpa es simplemente irme y hacer que tu vida sea más sencilla, sin problemas ni tristezas, siendo mi única opción restante marcharme.</p>
 
@@ -619,12 +618,16 @@
         const audio = document.getElementById('playlist-audio');
         const muteBtn = document.getElementById('mute-btn');
         const muteLabel = document.getElementById('mute-label');
+        const backLink = document.querySelector('.back-link');
+        const enIframe = (window.self !== window.top);
+        let silenciadoLocal = false;
 
         audio.volume = 1.0; // Volumen al 100% por default
         audio.muted = false; // Música activa con sonido por default
 
         function actualizarEstadoBotonMute() {
-            if (!audio.muted) {
+            const estaSilenciado = enIframe ? silenciadoLocal : audio.muted;
+            if (!estaSilenciado) {
                 muteBtn.classList.add('playing');
                 muteLabel.textContent = 'Silenciar';
             } else {
@@ -634,20 +637,27 @@
         }
 
         function cargarCancion(indice) {
-            indiceActual = (indice + playlist.length) % playlist.length; // Si pasa de la 3, regresa a la 1 (índice 0)
+            if (enIframe) return; // El audio ya suena desde index.html sin interrupción
+            indiceActual = (indice + playlist.length) % playlist.length; // Si pasa de la 4, regresa a la 1 (índice 0)
             audio.src = playlist[indiceActual].src;
             audio.play().catch(() => {});
             actualizarEstadoBotonMute();
         }
 
         // Cuando termina una canción, pasa automáticamente a la siguiente.
-        // Al terminar la 3ra canción, vuelve a empezar desde la 1ra.
+        // Al terminar la 4ta canción, vuelve a empezar desde la 1ra.
         audio.addEventListener('ended', () => {
-            cargarCancion(indiceActual + 1);
+            if (!enIframe) cargarCancion(indiceActual + 1);
         });
 
         // Único botón: solo silencia o reactiva el sonido (la música sigue corriendo siempre)
         muteBtn.addEventListener('click', () => {
+            if (enIframe) {
+                silenciadoLocal = !silenciadoLocal;
+                window.parent.postMessage({ tipo: 'MUTE_DESPEDIDA', muted: silenciadoLocal }, '*');
+                actualizarEstadoBotonMute();
+                return;
+            }
             if (audio.paused) {
                 audio.muted = false;
                 audio.play().catch(() => {});
@@ -657,66 +667,72 @@
             actualizarEstadoBotonMute();
         });
 
-        // Iniciar desde el primer milisegundo
-        cargarCancion(0);
-        audio.addEventListener('canplay', () => {
-            if (audio.paused) audio.play().catch(() => {});
-        }, { once: true });
-
-        // Si el navegador retuvo el inicio automático, cualquier movimiento o gesto lo activa al instante
-        const eventosDesbloqueo = ['mousemove', 'mousedown', 'pointermove', 'pointerdown', 'touchstart', 'scroll', 'keydown', 'wheel'];
-        function desbloquearAlInstante(e) {
-            if (e.target && e.target.closest && e.target.closest('#mute-btn')) return;
-            if (audio.paused) {
-                audio.play().then(() => {
-                    actualizarEstadoBotonMute();
-                    eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
-                }).catch(() => {});
-            } else {
-                eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
-            }
+        if (backLink && enIframe) {
+            backLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.parent.postMessage({ tipo: 'VOLVER_INDEX' }, '*');
+            });
         }
-        eventosDesbloqueo.forEach(ev => window.addEventListener(ev, desbloquearAlInstante, { passive: true }));
+
+        if (!enIframe) {
+            // Modo independiente: iniciar desde el primer milisegundo
+            cargarCancion(0);
+            audio.addEventListener('canplay', () => {
+                if (audio.paused) audio.play().catch(() => {});
+            }, { once: true });
+
+            const eventosDesbloqueo = ['click', 'mousedown', 'pointerdown', 'touchstart', 'scroll', 'keydown', 'wheel'];
+            function desbloquearAlInstante(e) {
+                if (e.target && e.target.closest && e.target.closest('#mute-btn')) return;
+                if (audio.paused) {
+                    audio.play().then(() => {
+                        actualizarEstadoBotonMute();
+                        eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
+                    }).catch(() => {});
+                } else {
+                    eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
+                }
+            }
+            eventosDesbloqueo.forEach(ev => window.addEventListener(ev, desbloquearAlInstante, { passive: true }));
+        } else {
+            actualizarEstadoBotonMute();
+        }
 
         // =========================================================================
-        // BARRA DE PROGRESO DE LECTURA Y APARICIÓN SUAVE DE PÁRRAFOS
+        // BARRA DE PROGRESO DE LECTURA (FLUIDA Y SIN SALTOS EN MÓVIL)
         // =========================================================================
         const progressBar = document.getElementById('progress-bar');
+        let tickingScroll = false;
         window.addEventListener('scroll', () => {
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-            progressBar.style.width = `${progress}%`;
-        });
-
-        const elementosTexto = document.querySelectorAll('.letter-content p, .letter-content h2');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.08,
-            rootMargin: '0px 0px -30px 0px'
-        });
-
-        elementosTexto.forEach(el => observer.observe(el));
+            if (!tickingScroll) {
+                window.requestAnimationFrame(() => {
+                    const scrollTop = window.scrollY;
+                    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                    progressBar.style.width = `${progress}%`;
+                    tickingScroll = false;
+                });
+                tickingScroll = true;
+            }
+        }, { passive: true });
 
         // =========================================================================
-        // PARTÍCULAS DE FONDO
+        // PARTÍCULAS DE FONDO (EVITA REDIMENSIONAR EN SCROLL DE MÓVIL)
         // =========================================================================
         const canvas = document.getElementById('particles');
         const ctx = canvas.getContext('2d');
         let particlesArray = [];
+        let ultimoAncho = window.innerWidth;
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        function resizeCanvas(forzar = false) {
+            if (forzar || Math.abs(window.innerWidth - ultimoAncho) > 10) {
+                ultimoAncho = window.innerWidth;
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        window.addEventListener('resize', () => resizeCanvas(false), { passive: true });
+        resizeCanvas(true);
 
         class Particle {
             constructor() {
