@@ -233,7 +233,7 @@
             transform: translateY(-2px);
         }
 
-        /* Goodbye screen when "Cerrar ventana" is clicked */
+        /* Goodbye / Breather screen when "Tomar un respiro" is clicked */
         .closed-overlay {
             position: fixed;
             inset: 0;
@@ -245,7 +245,7 @@
             justify-content: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 1.5s ease;
+            transition: opacity 1.4s ease;
             text-align: center;
             padding: 24px;
         }
@@ -259,8 +259,74 @@
             font-size: 1.5rem;
             font-style: italic;
             color: var(--text-secondary);
-            max-width: 480px;
-            line-height: 1.6;
+            max-width: 520px;
+            line-height: 1.65;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+
+        .closed-overlay.show-msg p {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Fullscreen Video Scene after message fades */
+        .video-scene {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            z-index: 110;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.8s ease;
+            overflow: hidden;
+        }
+
+        .video-scene.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-scene video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        /* Top message banner over video (disappears after 25s) */
+        .respiro-top-msg {
+            position: absolute;
+            top: 38px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 120;
+            width: 90%;
+            max-width: 780px;
+            background: rgba(7, 7, 11, 0.72);
+            border: 1px solid rgba(212, 180, 153, 0.35);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 16px;
+            text-align: center;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+            font-style: italic;
+            line-height: 1.55;
+            color: var(--text-primary);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+            opacity: 0;
+            transition: opacity 1.5s ease, transform 1.5s ease;
+            pointer-events: none;
+        }
+
+        .respiro-top-msg.visible {
+            opacity: 1;
         }
 
         /* =========================================================================
@@ -280,6 +346,7 @@
                 padding: 8px 14px;
                 font-size: 0.72rem;
                 letter-spacing: 1.2px;
+                z-index: 130;
             }
 
             .container {
@@ -323,6 +390,31 @@
             .closed-overlay p {
                 font-size: 1.3rem;
                 padding: 0 12px;
+            }
+
+            /* En teléfono: que el video se acomode bien y ocupe la mayor parte de la pantalla */
+            .video-scene {
+                justify-content: center;
+                background: radial-gradient(circle at center, #0e0e18 0%, #000000 100%);
+            }
+
+            .video-scene video {
+                width: 100%;
+                height: 82dvh;
+                max-height: 100dvh;
+                object-fit: cover;
+                object-position: center;
+                border-top: 1px solid rgba(212, 180, 153, 0.18);
+                border-bottom: 1px solid rgba(212, 180, 153, 0.18);
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.95);
+            }
+
+            .respiro-top-msg {
+                top: calc(64px + env(safe-area-inset-top, 0px));
+                width: 92%;
+                padding: 16px 20px;
+                font-size: 1.18rem;
+                line-height: 1.5;
             }
         }
 
@@ -398,15 +490,26 @@
 
         <div id="buttons" class="buttons-container">
             <a href="Despedida.html" class="btn btn-primary">Leer / Continuar</a>
-            <button id="close-btn" class="btn btn-secondary">Cerrar ventana</button>
+            <button id="close-btn" class="btn btn-secondary">Tomar un respiro</button>
         </div>
 
         <div class="decorative-line"></div>
     </main>
 
+    <!-- Pantalla en negro con mensaje que aparece y desaparece -->
     <div id="closed-screen" class="closed-overlay">
-        <p>Está bien, respeto tu decisión.<br>Cuídate mucho y que tengas una linda vida. :)</p>
+        <p id="closed-msg">Está bien, respeto tu decisión.<br>Cuídate mucho y que tengas una linda vida. :)</p>
     </div>
+
+    <!-- Escena del video en pantalla completa (sin sonido propio) y su música dedicada -->
+    <div id="video-scene" class="video-scene">
+        <div id="respiro-top-msg" class="respiro-top-msg">
+            Esta bien tomarse un respiro y pensar las cosas, todos necesitamos espacio aunque se sienta solitario, esta sera mi ultima acción por ti
+        </div>
+        <video id="respiro-video" src="video_respiro.mp4" muted loop playsinline preload="auto"></video>
+    </div>
+
+    <audio id="respiro-music" src="musica_respiro.mp4" loop preload="auto"></audio>
 
     <script>
         // =========================================================================
@@ -449,37 +552,47 @@
         window.addEventListener('DOMContentLoaded', revelarPalabras);
 
         // =========================================================================
-        // BOTÓN PARA CERRAR LA VENTANA
-        // =========================================================================
-        closeBtn.addEventListener('click', () => {
-            bgMusic.pause();
-            // Intenta cerrar la pestaña del navegador
-            window.open('', '_self', '');
-            window.close();
-
-            // Si el navegador bloquea window.close() por seguridad, muestra pantalla de despedida y redirige
-            setTimeout(() => {
-                closedScreen.classList.add('active');
-                setTimeout(() => {
-                    window.location.href = 'about:blank';
-                }, 3200);
-            }, 200);
-        });
-
-        // =========================================================================
-        // CONTROL DE MÚSICA DE FONDO EN LOOP (SIEMPRE ACTIVA POR DEFAULT, DESDE SEGUNDO 0)
-        // Nota: el archivo musica_index.mp4 ya fue recortado exactamente desde el segundo 32,
-        // por lo que arranca de inmediato en el segundo 0.0 sin retraso.
+        // CONTROL DE AUDIO UNIFICADO (SIN SOBREPOSICIÓN ENTRE INDEX Y RESPIRO)
         // =========================================================================
         const bgMusic = document.getElementById('bg-music');
         const musicBtn = document.getElementById('music-btn');
         const musicLabel = document.getElementById('music-label');
+        const videoScene = document.getElementById('video-scene');
+        const respiroVideo = document.getElementById('respiro-video');
+        const respiroMusic = document.getElementById('respiro-music');
+        const respiroTopMsg = document.getElementById('respiro-top-msg');
 
-        bgMusic.volume = 1.0; // Volumen al 100% por default
-        bgMusic.muted = false; // Activa con sonido por default
+        let modoRespiroActivo = false;
+        let estadoSilenciado = false;
+
+        bgMusic.volume = 1.0;
+        bgMusic.muted = false;
+        respiroMusic.volume = 1.0;
+        respiroMusic.muted = false;
+
+        const eventosDesbloqueo = ['click', 'mousedown', 'pointerdown', 'touchstart', 'keydown'];
+
+        function eliminarEventosDesbloqueo() {
+            eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
+        }
+
+        // Destruye por completo el audio del index para que jamás pueda volver a sonar ni mezclarse
+        function detenerYDestruirAudioIndex() {
+            eliminarEventosDesbloqueo();
+            try {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+                bgMusic.muted = true;
+                bgMusic.removeAttribute('src');
+                while (bgMusic.firstChild) {
+                    bgMusic.removeChild(bgMusic.firstChild);
+                }
+                bgMusic.load();
+            } catch (err) {}
+        }
 
         function actualizarEstadoBotonMute() {
-            if (!bgMusic.muted) {
+            if (!estadoSilenciado) {
                 musicBtn.classList.add('playing');
                 musicLabel.textContent = 'Silenciar';
             } else {
@@ -488,52 +601,154 @@
             }
         }
 
-        function intentarReproducir() {
-            bgMusic.muted = false;
+        function intentarReproducirIndex() {
+            if (modoRespiroActivo) return;
+            bgMusic.muted = estadoSilenciado;
             bgMusic.volume = 1.0;
             const promesa = bgMusic.play();
             if (promesa !== undefined) {
                 promesa.then(() => {
+                    if (modoRespiroActivo) {
+                        detenerYDestruirAudioIndex();
+                        return;
+                    }
                     actualizarEstadoBotonMute();
-                }).catch(() => {
-                    // Si el navegador aún no permite audio hasta detectar movimiento/foco,
-                    // seguimos reintentando automáticamente
-                });
+                    eliminarEventosDesbloqueo();
+                }).catch(() => {});
             }
         }
 
-        // Intentar reproducir desde el primer milisegundo en que existe el script
-        intentarReproducir();
-        bgMusic.addEventListener('canplay', intentarReproducir, { once: true });
-        window.addEventListener('DOMContentLoaded', intentarReproducir);
-        window.addEventListener('load', intentarReproducir);
-        window.addEventListener('focus', () => {
-            if (bgMusic.paused) intentarReproducir();
-        });
+        // Clic invisible automático al cargar la página para activar el audio inmediatamente
+        function dispararClickInvisible() {
+            if (modoRespiroActivo) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctxAudio = new AudioCtx();
+                    ctxAudio.resume().catch(() => {});
+                }
+            } catch (e) {}
 
-        // Además, al mínimo movimiento del mouse, rueda, cursor o toque sobre la ventana,
-        // se activa instantáneamente si el navegador lo retuvo al abrir la pestaña:
-        const eventosDesbloqueo = ['mousemove', 'mousedown', 'pointermove', 'pointerdown', 'touchstart', 'keydown', 'wheel'];
+            const evt = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true
+            });
+            document.body.dispatchEvent(evt);
+            intentarReproducirIndex();
+        }
+
+        // Ejecutar intento de reproducción y clic invisible apenas cargue
+        intentarReproducirIndex();
+        bgMusic.addEventListener('canplay', () => {
+            if (!modoRespiroActivo) intentarReproducirIndex();
+        }, { once: true });
+        window.addEventListener('DOMContentLoaded', dispararClickInvisible);
+        window.addEventListener('load', dispararClickInvisible);
+
+        // Si el navegador aún requiere interacción física, desbloquear en el primer toque/clic
+        // (excepto si el clic es en "Tomar un respiro" o "Leer / Continuar")
         function desbloquearAlInstante(e) {
-            if (e.target && e.target.closest && e.target.closest('#close-btn')) return;
-            if (bgMusic.paused) {
-                bgMusic.play().then(() => {
-                    actualizarEstadoBotonMute();
-                    eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
-                }).catch(() => {});
-            } else {
-                eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
+            if (modoRespiroActivo) {
+                eliminarEventosDesbloqueo();
+                return;
+            }
+            if (e && e.target && e.target.closest) {
+                if (e.target.closest('#close-btn')) {
+                    // Si lo primero que toca es "Tomar un respiro", destruimos el audio del index de inmediato
+                    modoRespiroActivo = true;
+                    detenerYDestruirAudioIndex();
+                    return;
+                }
+                if (e.target.closest('.btn-primary') || e.target.closest('#music-btn')) {
+                    return;
+                }
+            }
+            if (bgMusic.paused && !modoRespiroActivo) {
+                intentarReproducirIndex();
             }
         }
         eventosDesbloqueo.forEach(ev => window.addEventListener(ev, desbloquearAlInstante, { passive: true }));
 
-        // El único botón solo silencia o reactiva el sonido (la música sigue corriendo siempre)
-        musicBtn.addEventListener('click', () => {
-            if (bgMusic.paused) {
-                bgMusic.muted = false;
-                bgMusic.play().catch(() => {});
+        // =========================================================================
+        // BOTÓN "TOMAR UN RESPIRO": PANTALLA NEGRA -> MENSAJE -> VIDEO + MÚSICA NUEVA
+        // =========================================================================
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            modoRespiroActivo = true;
+
+            // 1. Eliminar por completo el audio del index para que NUNCA se mezcle ni siga sonando
+            detenerYDestruirAudioIndex();
+
+            // 2. Desbloquear el video (siempre mudo) y el nuevo audio en el mismo instante del clic
+            //    para que a los 5.2 segundos arranquen solos sin necesidad de tocar la pantalla
+            respiroVideo.muted = true;
+            respiroVideo.play().then(() => {
+                respiroVideo.pause();
+                respiroVideo.currentTime = 0;
+            }).catch(() => {});
+
+            respiroMusic.volume = 0;
+            respiroMusic.muted = false;
+            respiroMusic.play().then(() => {
+                respiroMusic.pause();
+                respiroMusic.currentTime = 0;
+                respiroMusic.volume = 1.0;
+                respiroMusic.muted = estadoSilenciado;
+            }).catch(() => {});
+
+            // 3. Poner pantalla en negro
+            closedScreen.classList.add('active');
+
+            // 4. Hacer aparecer el mensaje en la pantalla negra
+            setTimeout(() => {
+                closedScreen.classList.add('show-msg');
+            }, 400);
+
+            // 5. Hacer desaparecer el mensaje después de unos segundos
+            setTimeout(() => {
+                closedScreen.classList.remove('show-msg');
+            }, 3800);
+
+            // 6. Mostrar el video a pantalla completa, reproducir únicamente la música del respiro
+            //    y mostrar arriba el mensaje durante 25 segundos
+            setTimeout(() => {
+                videoScene.classList.add('active');
+
+                respiroVideo.muted = true;
+                respiroVideo.currentTime = 0;
+                respiroVideo.play().catch(() => {});
+
+                respiroMusic.currentTime = 0;
+                respiroMusic.volume = 1.0;
+                respiroMusic.muted = estadoSilenciado;
+                respiroMusic.play().catch(() => {});
+                actualizarEstadoBotonMute();
+
+                // Aparece el mensaje superior
+                setTimeout(() => {
+                    respiroTopMsg.classList.add('visible');
+
+                    // Desaparece después de 25 segundos (25000 ms)
+                    setTimeout(() => {
+                        respiroTopMsg.classList.remove('visible');
+                    }, 25000);
+                }, 600);
+            }, 5200);
+        });
+
+        // El único botón solo silencia o reactiva el sonido activo actual
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const audioActivo = modoRespiroActivo ? respiroMusic : bgMusic;
+            if (audioActivo.paused) {
+                estadoSilenciado = false;
+                audioActivo.muted = false;
+                audioActivo.volume = 1.0;
+                audioActivo.play().catch(() => {});
             } else {
-                bgMusic.muted = !bgMusic.muted;
+                estadoSilenciado = !estadoSilenciado;
+                audioActivo.muted = estadoSilenciado;
             }
             actualizarEstadoBotonMute();
         });
