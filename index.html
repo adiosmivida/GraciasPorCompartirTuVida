@@ -575,7 +575,7 @@
     <div id="intro-unlock" class="intro-unlock">
         <div class="decorative-line"></div>
         <p class="intro-unlock-subtitle">Para Valentina</p>
-        <div class="intro-unlock-btn">Abrir</div>
+        <button type="button" id="intro-unlock-btn" class="intro-unlock-btn">Abrir</button>
         <div class="decorative-line"></div>
     </div>
 
@@ -585,20 +585,21 @@
     </div>
 
     <!-- Escena del video en pantalla completa (sin sonido propio) y su música dedicada -->
+    <!-- preload="none" al inicio para que no compitan con la carga inmediata del audio de index -->
     <div id="video-scene" class="video-scene">
         <div id="respiro-top-msg" class="respiro-top-msg">
             Esta bien tomarse un respiro y pensar las cosas, todos necesitamos espacio aunque se sienta solitario, esta sera mi ultima acción por ti
         </div>
-        <video id="respiro-video" src="video_respiro.mp4" muted loop playsinline preload="auto"></video>
+        <video id="respiro-video" src="video_respiro.mp4" muted loop playsinline preload="none"></video>
     </div>
 
-    <audio id="respiro-music" src="musica_respiro.mp4" loop preload="auto"></audio>
+    <audio id="respiro-music" src="musica_respiro.mp4" loop preload="none"></audio>
 
     <!-- Escena de Despedida integrada con sus 4 canciones en secuencia -->
     <div id="despedida-scene" class="despedida-scene">
         <iframe id="despedida-frame" allow="autoplay"></iframe>
     </div>
-    <audio id="despedida-music" preload="auto"></audio>
+    <audio id="despedida-music" preload="none"></audio>
 
     <script>
         // =========================================================================
@@ -702,8 +703,8 @@
 
         // Intentar iniciar el audio del index apenas carga la página:
         // - Si el navegador permite autoplay con sonido, arranca la música y las palabras al instante.
-        // - Si el navegador bloquea el sonido hasta que haya 1 clic, muestra la pantalla "Abrir"
-        //   para que la música y las palabras arranquen exactamente juntas desde el segundo 0.
+        // - Si el navegador móvil bloquea el sonido hasta que haya 1 clic, muestra la pantalla "Abrir"
+        //   para que al tocarla (evento 'click') arranquen la música y las palabras al mismo tiempo.
         window.addEventListener('DOMContentLoaded', () => {
             bgMusic.volume = 1.0;
             bgMusic.muted = false;
@@ -714,7 +715,7 @@
                     actualizarEstadoBotonMute();
                     revelarPalabras();
                 }).catch(() => {
-                    // El navegador requiere 1 clic físico para habilitar el sonido de la pestaña
+                    // El navegador requiere 1 clic físico para habilitar el sonido
                     introUnlock.classList.add('active');
                 });
             } else {
@@ -722,21 +723,39 @@
             }
         });
 
-        function desbloquearDesdeIntro() {
-            if (!introUnlock.classList.contains('active')) return;
-            introUnlock.classList.remove('active');
-            if (!modoRespiroActivo && !modoDespedidaActivo) {
-                bgMusic.muted = estadoSilenciado;
-                bgMusic.volume = 1.0;
-                bgMusic.currentTime = 0;
-                bgMusic.play().catch(() => {});
+        function desbloquearDesdeIntro(e) {
+            if (e) e.stopPropagation();
+            if (modoRespiroActivo || modoDespedidaActivo) return;
+
+            estadoSilenciado = false;
+            bgMusic.muted = false;
+            bgMusic.volume = 1.0;
+            bgMusic.play().then(() => {
                 actualizarEstadoBotonMute();
-            }
+            }).catch(() => {});
+
+            introUnlock.classList.remove('active');
+            actualizarEstadoBotonMute();
             revelarPalabras();
         }
 
+        // Usamos únicamente 'click' (exactamente igual que el botón Silenciar) porque en móviles
+        // 'touchstart' no tiene permiso de audio y bloqueaba el 'click' posterior.
         introUnlock.addEventListener('click', desbloquearDesdeIntro);
-        introUnlock.addEventListener('touchstart', desbloquearDesdeIntro, { passive: true });
+        document.getElementById('intro-unlock-btn').addEventListener('click', desbloquearDesdeIntro);
+
+        // Respaldo adicional: cualquier clic en el documento si el audio aún estuviera en pausa
+        document.addEventListener('click', (e) => {
+            if (modoRespiroActivo || modoDespedidaActivo || estadoSilenciado) return;
+            if (e.target && e.target.closest && (e.target.closest('#music-btn') || e.target.closest('#close-btn') || e.target.closest('#continue-btn'))) return;
+            if (bgMusic.paused) {
+                bgMusic.muted = false;
+                bgMusic.volume = 1.0;
+                bgMusic.play().then(() => {
+                    actualizarEstadoBotonMute();
+                }).catch(() => {});
+            }
+        });
 
         // =========================================================================
         // BOTÓN "LEER / CONTINUAR": CARGA DESPEDIDA CON LAS 4 CANCIONES AL INSTANTE
@@ -796,22 +815,14 @@
             // 1. Eliminar por completo el audio del index para que NUNCA se mezcle ni siga sonando
             detenerYDestruirAudioIndex();
 
-            // 2. Desbloquear el video (siempre mudo) y el nuevo audio en el mismo instante del clic
-            //    para que a los 5.2 segundos arranquen solos sin necesidad de tocar la pantalla
+            // 2. Arrancar el video (mudo) y el nuevo audio en el mismo instante del clic
+            //    con volumen 0 durante la pantalla negra para no perder el permiso en teléfonos
             respiroVideo.muted = true;
-            respiroVideo.play().then(() => {
-                respiroVideo.pause();
-                respiroVideo.currentTime = 0;
-            }).catch(() => {});
+            respiroVideo.play().catch(() => {});
 
             respiroMusic.volume = 0;
-            respiroMusic.muted = false;
-            respiroMusic.play().then(() => {
-                respiroMusic.pause();
-                respiroMusic.currentTime = 0;
-                respiroMusic.volume = 1.0;
-                respiroMusic.muted = estadoSilenciado;
-            }).catch(() => {});
+            respiroMusic.muted = estadoSilenciado;
+            respiroMusic.play().catch(() => {});
 
             // 3. Poner pantalla en negro
             closedScreen.classList.add('active');
@@ -826,19 +837,21 @@
                 closedScreen.classList.remove('show-msg');
             }, 3800);
 
-            // 6. Mostrar el video a pantalla completa, reproducir únicamente la música del respiro
+            // 6. Mostrar el video a pantalla completa, subir el volumen de la música del respiro
             //    y mostrar arriba el mensaje durante 25 segundos
             setTimeout(() => {
                 videoScene.classList.add('active');
 
                 respiroVideo.muted = true;
-                respiroVideo.currentTime = 0;
-                respiroVideo.play().catch(() => {});
+                if (respiroVideo.paused) {
+                    respiroVideo.play().catch(() => {});
+                }
 
-                respiroMusic.currentTime = 0;
                 respiroMusic.volume = 1.0;
                 respiroMusic.muted = estadoSilenciado;
-                respiroMusic.play().catch(() => {});
+                if (respiroMusic.paused) {
+                    respiroMusic.play().catch(() => {});
+                }
                 actualizarEstadoBotonMute();
 
                 // Aparece el mensaje superior
