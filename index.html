@@ -329,6 +329,81 @@
             opacity: 1;
         }
 
+        /* Pantalla de apertura sutil cuando el navegador bloquea el sonido inicial */
+        .intro-unlock {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.9s ease;
+            cursor: pointer;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .intro-unlock.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .intro-unlock-subtitle {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+            font-style: italic;
+            color: var(--text-primary);
+            opacity: 0.9;
+        }
+
+        .intro-unlock-btn {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 14px 36px;
+            border-radius: 50px;
+            background: rgba(212, 180, 153, 0.14);
+            color: var(--text-primary);
+            border: 1px solid rgba(212, 180, 153, 0.55);
+            box-shadow: 0 4px 25px rgba(212, 180, 153, 0.18);
+            animation: pulseGlow 2.4s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 4px 20px rgba(212, 180, 153, 0.14); transform: scale(1); }
+            50% { box-shadow: 0 6px 32px rgba(212, 180, 153, 0.35); transform: scale(1.03); }
+        }
+
+        /* Contenedor de Despedida integrado para no perder el desbloqueo de audio */
+        .despedida-scene {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 140;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+
+        .despedida-scene.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .despedida-scene iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
         /* =========================================================================
            DISEÑO RESPONSIVO PARA TELÉFONOS MÓVILES (SIN PERDER LA ESENCIA)
            ========================================================================= */
@@ -489,12 +564,20 @@
         </div>
 
         <div id="buttons" class="buttons-container">
-            <a href="Despedida.html" class="btn btn-primary">Leer / Continuar</a>
+            <a href="Despedida.html" id="continue-btn" class="btn btn-primary">Leer / Continuar</a>
             <button id="close-btn" class="btn btn-secondary">Tomar un respiro</button>
         </div>
 
         <div class="decorative-line"></div>
     </main>
+
+    <!-- Pantalla sutil de entrada (solo aparece si el navegador bloquea el inicio de sonido sin clic) -->
+    <div id="intro-unlock" class="intro-unlock">
+        <div class="decorative-line"></div>
+        <p class="intro-unlock-subtitle">Para Valentina</p>
+        <div class="intro-unlock-btn">Abrir</div>
+        <div class="decorative-line"></div>
+    </div>
 
     <!-- Pantalla en negro con mensaje que aparece y desaparece -->
     <div id="closed-screen" class="closed-overlay">
@@ -510,6 +593,12 @@
     </div>
 
     <audio id="respiro-music" src="musica_respiro.mp4" loop preload="auto"></audio>
+
+    <!-- Escena de Despedida integrada con sus 4 canciones en secuencia -->
+    <div id="despedida-scene" class="despedida-scene">
+        <iframe id="despedida-frame" allow="autoplay"></iframe>
+    </div>
+    <audio id="despedida-music" preload="auto"></audio>
 
     <script>
         // =========================================================================
@@ -533,8 +622,11 @@
         });
 
         const wordSpans = document.querySelectorAll('.word');
+        let palabrasYaIniciadas = false;
 
         function revelarPalabras() {
+            if (palabrasYaIniciadas) return;
+            palabrasYaIniciadas = true;
             wordSpans.forEach((span, index) => {
                 setTimeout(() => {
                     span.classList.add('visible');
@@ -545,40 +637,47 @@
                             buttonsContainer.classList.add('show');
                         }, 700);
                     }
-                }, 600 + index * tiempoEntrePalabrasMs);
+                }, 400 + index * tiempoEntrePalabrasMs);
             });
         }
 
-        window.addEventListener('DOMContentLoaded', revelarPalabras);
-
         // =========================================================================
-        // CONTROL DE AUDIO UNIFICADO (SIN SOBREPOSICIÓN ENTRE INDEX Y RESPIRO)
+        // CONTROL DE AUDIO UNIFICADO (INDEX, TOMAR UN RESPIRO Y DESPEDIDA)
         // =========================================================================
         const bgMusic = document.getElementById('bg-music');
         const musicBtn = document.getElementById('music-btn');
         const musicLabel = document.getElementById('music-label');
+        const introUnlock = document.getElementById('intro-unlock');
+        const continueBtn = document.getElementById('continue-btn');
         const videoScene = document.getElementById('video-scene');
         const respiroVideo = document.getElementById('respiro-video');
         const respiroMusic = document.getElementById('respiro-music');
         const respiroTopMsg = document.getElementById('respiro-top-msg');
+        const despedidaScene = document.getElementById('despedida-scene');
+        const despedidaFrame = document.getElementById('despedida-frame');
+        const despedidaMusic = document.getElementById('despedida-music');
+
+        const playlistDespedida = [
+            "cancion1.mp4",
+            "cancion2.mp4",
+            "cancion3.mp4",
+            "cancion4.mp4"
+        ];
+        let indiceDespedida = 0;
 
         let modoRespiroActivo = false;
+        let modoDespedidaActivo = false;
         let estadoSilenciado = false;
 
         bgMusic.volume = 1.0;
         bgMusic.muted = false;
         respiroMusic.volume = 1.0;
         respiroMusic.muted = false;
-
-        const eventosDesbloqueo = ['click', 'mousedown', 'pointerdown', 'touchstart', 'keydown'];
-
-        function eliminarEventosDesbloqueo() {
-            eventosDesbloqueo.forEach(ev => window.removeEventListener(ev, desbloquearAlInstante));
-        }
+        despedidaMusic.volume = 1.0;
+        despedidaMusic.muted = false;
 
         // Destruye por completo el audio del index para que jamás pueda volver a sonar ni mezclarse
         function detenerYDestruirAudioIndex() {
-            eliminarEventosDesbloqueo();
             try {
                 bgMusic.pause();
                 bgMusic.currentTime = 0;
@@ -601,74 +700,91 @@
             }
         }
 
-        function intentarReproducirIndex() {
-            if (modoRespiroActivo) return;
-            bgMusic.muted = estadoSilenciado;
+        // Intentar iniciar el audio del index apenas carga la página:
+        // - Si el navegador permite autoplay con sonido, arranca la música y las palabras al instante.
+        // - Si el navegador bloquea el sonido hasta que haya 1 clic, muestra la pantalla "Abrir"
+        //   para que la música y las palabras arranquen exactamente juntas desde el segundo 0.
+        window.addEventListener('DOMContentLoaded', () => {
             bgMusic.volume = 1.0;
-            const promesa = bgMusic.play();
-            if (promesa !== undefined) {
-                promesa.then(() => {
-                    if (modoRespiroActivo) {
-                        detenerYDestruirAudioIndex();
-                        return;
-                    }
+            bgMusic.muted = false;
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    introUnlock.classList.remove('active');
                     actualizarEstadoBotonMute();
-                    eliminarEventosDesbloqueo();
-                }).catch(() => {});
+                    revelarPalabras();
+                }).catch(() => {
+                    // El navegador requiere 1 clic físico para habilitar el sonido de la pestaña
+                    introUnlock.classList.add('active');
+                });
+            } else {
+                revelarPalabras();
             }
+        });
+
+        function desbloquearDesdeIntro() {
+            if (!introUnlock.classList.contains('active')) return;
+            introUnlock.classList.remove('active');
+            if (!modoRespiroActivo && !modoDespedidaActivo) {
+                bgMusic.muted = estadoSilenciado;
+                bgMusic.volume = 1.0;
+                bgMusic.currentTime = 0;
+                bgMusic.play().catch(() => {});
+                actualizarEstadoBotonMute();
+            }
+            revelarPalabras();
         }
 
-        // Clic invisible automático al cargar la página para activar el audio inmediatamente
-        function dispararClickInvisible() {
-            if (modoRespiroActivo) return;
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    const ctxAudio = new AudioCtx();
-                    ctxAudio.resume().catch(() => {});
-                }
-            } catch (e) {}
+        introUnlock.addEventListener('click', desbloquearDesdeIntro);
+        introUnlock.addEventListener('touchstart', desbloquearDesdeIntro, { passive: true });
 
-            const evt = new MouseEvent('click', {
-                view: window,
-                bubbles: true,
-                cancelable: true
-            });
-            document.body.dispatchEvent(evt);
-            intentarReproducirIndex();
+        // =========================================================================
+        // BOTÓN "LEER / CONTINUAR": CARGA DESPEDIDA CON LAS 4 CANCIONES AL INSTANTE
+        // =========================================================================
+        function reproducirCancionDespedida(idx) {
+            indiceDespedida = (idx + playlistDespedida.length) % playlistDespedida.length;
+            despedidaMusic.src = playlistDespedida[indiceDespedida];
+            despedidaMusic.volume = 1.0;
+            despedidaMusic.muted = estadoSilenciado;
+            despedidaMusic.play().catch(() => {});
         }
 
-        // Ejecutar intento de reproducción y clic invisible apenas cargue
-        intentarReproducirIndex();
-        bgMusic.addEventListener('canplay', () => {
-            if (!modoRespiroActivo) intentarReproducirIndex();
-        }, { once: true });
-        window.addEventListener('DOMContentLoaded', dispararClickInvisible);
-        window.addEventListener('load', dispararClickInvisible);
+        despedidaMusic.addEventListener('ended', () => {
+            if (modoDespedidaActivo) {
+                reproducirCancionDespedida(indiceDespedida + 1);
+            }
+        });
 
-        // Si el navegador aún requiere interacción física, desbloquear en el primer toque/clic
-        // (excepto si el clic es en "Tomar un respiro" o "Leer / Continuar")
-        function desbloquearAlInstante(e) {
-            if (modoRespiroActivo) {
-                eliminarEventosDesbloqueo();
-                return;
+        continueBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            modoDespedidaActivo = true;
+
+            // 1. Destruir el audio del index para que jamás siga sonando
+            detenerYDestruirAudioIndex();
+
+            // 2. Arrancar de inmediato la Canción 1 de Despedida aprovechando el clic en "Leer / Continuar"
+            reproducirCancionDespedida(0);
+
+            // 3. Ocultar el botón de música superior (Despedida tiene el suyo abajo a la derecha)
+            musicBtn.style.display = 'none';
+
+            // 4. Mostrar la carta completa de Despedida.html
+            despedidaFrame.src = 'Despedida.html';
+            despedidaScene.classList.add('active');
+            document.title = 'Despedida — Mi última confesión';
+        });
+
+        // Escuchar los botones de "Silenciar" y "Volver" desde dentro de Despedida.html
+        window.addEventListener('message', (e) => {
+            if (!e.data || !e.data.tipo) return;
+            if (e.data.tipo === 'MUTE_DESPEDIDA') {
+                estadoSilenciado = !!e.data.muted;
+                despedidaMusic.muted = estadoSilenciado;
+            } else if (e.data.tipo === 'VOLVER_INDEX') {
+                window.location.reload();
             }
-            if (e && e.target && e.target.closest) {
-                if (e.target.closest('#close-btn')) {
-                    // Si lo primero que toca es "Tomar un respiro", destruimos el audio del index de inmediato
-                    modoRespiroActivo = true;
-                    detenerYDestruirAudioIndex();
-                    return;
-                }
-                if (e.target.closest('.btn-primary') || e.target.closest('#music-btn')) {
-                    return;
-                }
-            }
-            if (bgMusic.paused && !modoRespiroActivo) {
-                intentarReproducirIndex();
-            }
-        }
-        eventosDesbloqueo.forEach(ev => window.addEventListener(ev, desbloquearAlInstante, { passive: true }));
+        });
 
         // =========================================================================
         // BOTÓN "TOMAR UN RESPIRO": PANTALLA NEGRA -> MENSAJE -> VIDEO + MÚSICA NUEVA
